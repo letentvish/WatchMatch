@@ -1,0 +1,6 @@
+{
+  "name": "WatchMatch",
+  "description": "A conversational movie and series discovery agent that converts vague viewing intent into a short, trustworthy watchlist.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
