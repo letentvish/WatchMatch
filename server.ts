@@ -24,6 +24,153 @@ const ai = new GoogleGenAI({
   },
 });
 
+// Helper: Resilient Gemini API caller with Exponential Backoff for Rate Limits (429/RESOURCE_EXHAUSTED)
+async function callGeminiWithRetry(
+  params: Parameters<typeof ai.models.generateContent>[0],
+  maxRetries = 2,
+  baseDelayMs = 1200
+) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await ai.models.generateContent(params);
+    } catch (err: any) {
+      const errStr = String(err?.message || err);
+      const isRateLimit =
+        err?.status === 429 ||
+        errStr.includes('429') ||
+        errStr.includes('RESOURCE_EXHAUSTED') ||
+        errStr.includes('quota') ||
+        errStr.includes('rate limit');
+
+      if (isRateLimit && attempt < maxRetries) {
+        const delay = baseDelayMs * Math.pow(2, attempt) + Math.random() * 500;
+        console.warn(`[Gemini API 429 Rate Limit] Retrying request in ${Math.round(delay)}ms...`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      } else if (isRateLimit) {
+        throw new Error('GEMINI_RATE_LIMIT_EXHAUSTED');
+      } else {
+        throw err;
+      }
+    }
+  }
+  throw new Error('GEMINI_RATE_LIMIT_EXHAUSTED');
+}
+
+// Fallback: Local keyword filter extractor when API rate limit or quota is reached
+function extractLocalFilters(userMessage: string, existingPreferences: any): SearchFilters {
+  const msg = (userMessage || '').toLowerCase();
+  const genres: string[] = [];
+  const genreKeywords = [
+    'action', 'comedy', 'drama', 'sci-fi', 'scifi', 'thriller', 'horror', 
+    'romance', 'animation', 'anime', 'documentary', 'crime', 'mystery', 'fantasy'
+  ];
+  genreKeywords.forEach(g => {
+    if (msg.includes(g)) {
+      if (g === 'scifi') genres.push('Sci-Fi');
+      else genres.push(g.charAt(0).toUpperCase() + g.slice(1));
+    }
+  });
+
+  const contentType: ('movie' | 'series' | 'anime' | 'documentary' | 'limited_series')[] = msg.includes('anime')
+    ? ['anime']
+    : (msg.includes('series') || msg.includes('show') || msg.includes('tv'))
+    ? ['series']
+    : ['movie'];
+
+  const languages: string[] = [];
+  if (msg.includes('hindi')) languages.push('Hindi');
+  if (msg.includes('korean')) languages.push('Korean');
+  if (msg.includes('english')) languages.push('English');
+
+  return {
+    intent_type: 'recommendation',
+    content_type: contentType,
+    genres,
+    subgenres: [],
+    moods: [],
+    themes: [],
+    pace: 'any',
+    language_preferences: languages,
+    country_preferences: [],
+    release_year_min: null,
+    release_year_max: null,
+    minimum_rating: null,
+    minimum_vote_count: null,
+    runtime_min_minutes: null,
+    runtime_max_minutes: null,
+    max_total_watch_hours: null,
+    series_status: 'any',
+    ending_preference: 'any',
+    content_exclusions: [],
+    platform_preferences: [],
+    similar_to_titles: [],
+    similar_to_people: [],
+    viewing_context: 'any',
+    region: 'IN',
+    sort_preference: 'best_match',
+    assumptions: ['Extracted via local keyword analysis during API rate limiting'],
+    clarifying_question: null,
+    ...(existingPreferences || {})
+  };
+}
+
+// Fallback: Local candidate scorer and recommendation generator when API quota is exhausted
+function generateFallbackRecommendations(userMessage: string, filters: SearchFilters, candidates: Movie[]): RecommendationResponse {
+  const msg = (userMessage || '').toLowerCase();
+
+  const scored = candidates.map(m => {
+    let score = 70;
+    if (filters.genres?.some(g => m.genres.some(mg => mg.toLowerCase() === g.toLowerCase()))) score += 15;
+    if (filters.content_type?.includes(m.contentType as any)) score += 10;
+    const words = msg.split(/\s+/).filter(w => w.length > 3);
+    words.forEach(w => {
+      if (m.title.toLowerCase().includes(w) || m.synopsis.toLowerCase().includes(w)) score += 8;
+    });
+    return { movie: m, score: Math.min(98, Math.max(60, score)) };
+  }).sort((a, b) => b.score - a.score);
+
+  const topMatches = scored.slice(0, 8);
+  const best = topMatches[0]?.movie || curatedMovies[0];
+
+  const movieDetails: Record<string, Movie> = {};
+  topMatches.forEach(item => {
+    movieDetails[item.movie.id] = item.movie;
+  });
+
+  return {
+    summary: `Curated discovery recommendations for "${userMessage || 'your request'}".`,
+    best_match: {
+      title_id: best.id,
+      match_score: topMatches[0]?.score || 95,
+      why_it_matches: [
+        `Aligns with your query preferences for ${best.genres.join(', ') || 'quality titles'}`,
+        `Top user rating of ${best.rating}/10`,
+        `Engaging ${best.pace || 'medium'} pace with high audience acclaim`
+      ],
+      possible_mismatch: 'Style and pacing may vary according to personal mood',
+      watch_commitment: `${best.runtime} mins`
+    },
+    recommendations: topMatches.slice(1).map(item => ({
+      title_id: item.movie.id,
+      match_score: item.score,
+      why_it_matches: [
+        `Strong genre and thematic alignment`,
+        `Rated ${item.movie.rating}/10 across top movie databases`,
+        `Available on ${item.movie.platforms?.slice(0,2).join(', ') || 'major platforms'}`
+      ],
+      possible_mismatch: 'Tone or runtime may differ slightly',
+      watch_commitment: `${item.movie.runtime} mins`,
+      recommended_for: `Fans of ${item.movie.genres[0] || 'great cinema'}`
+    })),
+    refinement_suggestions: [
+      "Try filtering by specific genres like Sci-Fi or Thriller",
+      "Specify whether you prefer a TV series or feature film",
+      "Adjust minimum IMDb rating filters"
+    ],
+    movieDetails
+  };
+}
+
 // Cache for movie posters and backdrops
 const posterCache = new Map<string, { posterUrl: string; backdropUrl: string }>();
 
@@ -80,14 +227,14 @@ You MUST return a valid JSON object matching this schema exactly:
   ]
 }`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+    const response = await callGeminiWithRetry({
+      model: 'gemini-3.6-flash',
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],
         responseMimeType: 'application/json',
       },
-    });
+    }, 1, 1000);
 
     const text = response.text || '{}';
     let result: any = {};
@@ -131,8 +278,12 @@ You MUST return a valid JSON object matching this schema exactly:
       });
     }
 
-  } catch (error) {
-    console.warn('[Poster Scout] Batch resolution failed/exhausted, using fallback placeholder:', error);
+  } catch (error: any) {
+    if (error?.message === 'GEMINI_RATE_LIMIT_EXHAUSTED' || String(error).includes('RESOURCE_EXHAUSTED') || String(error).includes('429')) {
+      console.log('[Poster Scout] Rate limit/quota reached. Using fallback poster placeholders.');
+    } else {
+      console.log('[Poster Scout] Notice:', error?.message || error);
+    }
     for (const item of needsResolution) {
       const poster = item.movie.posterUrl || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500&q=80';
       const backdrop = item.movie.backdropUrl || 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1200&q=80';
@@ -191,6 +342,120 @@ async function fetchFromTMDB(query: string): Promise<Movie[]> {
     return movies;
   } catch (error) {
     console.error('Error fetching from TMDB:', error);
+    return [];
+  }
+}
+
+// Helper: Perform live Google Search using Gemini Grounding to discover fresh titles matching query
+async function searchLiveMoviesWithGoogle(userMessage: string, filters: Partial<SearchFilters>): Promise<Movie[]> {
+  const filterSummary = [
+    filters.genres?.length ? `Genres: ${filters.genres.join(', ')}` : '',
+    filters.moods?.length ? `Moods: ${filters.moods.join(', ')}` : '',
+    filters.themes?.length ? `Themes: ${filters.themes.join(', ')}` : '',
+    filters.similar_to_titles?.length ? `Similar to: ${filters.similar_to_titles.join(', ')}` : '',
+    filters.language_preferences?.length ? `Languages: ${filters.language_preferences.join(', ')}` : '',
+    filters.content_type?.length ? `Content Type: ${filters.content_type.join(', ')}` : '',
+  ].filter(Boolean).join(' | ');
+
+  const searchPrompt = `Use Google Search live to find 10 to 15 real, popular, highly-rated, trending, or newly released movies, TV series, anime, or documentaries matching this user request:
+
+USER QUERY: "${userMessage}"
+FILTERS / PREFERENCES: ${filterSummary || 'None specified'}
+
+Instructions:
+1. Perform real Google searches to discover authentic titles, release years, IMDb/TMDB ratings, synopses, content types, and streaming availability.
+2. Find genuine titles—both well-known hits and recent/hidden releases—that fit the user's request.
+3. Return a valid JSON object matching this schema exactly:
+{
+  "discovered_titles": [
+    {
+      "id": "string",
+      "title": "string",
+      "year": 2024,
+      "contentType": "movie" | "series" | "anime" | "documentary" | "limited_series",
+      "rating": 8.1,
+      "voteCount": 15000,
+      "runtime": 120,
+      "seasons": 1,
+      "episodes": 10,
+      "seriesStatus": "finished" | "ongoing" | "cancelled" | "limited_series" | "any",
+      "genres": ["Sci-Fi", "Thriller"],
+      "moods": ["mind-bending", "intense"],
+      "pace": "slow" | "medium" | "fast",
+      "languages": ["English"],
+      "countries": ["United States"],
+      "synopsis": "Concise 2-3 sentence overview.",
+      "cast": ["Actor A", "Actor B"],
+      "platforms": ["Netflix", "Prime Video"]
+    }
+  ]
+}
+`;
+
+  try {
+    const response = await callGeminiWithRetry({
+      model: 'gemini-3.6-flash',
+      contents: searchPrompt,
+      config: {
+        tools: [{ googleSearch: {} }],
+        responseMimeType: 'application/json',
+      },
+    }, 1, 1000);
+
+    const resultText = (response.text || '{}').trim();
+    let parsed: any = {};
+    try {
+      parsed = JSON.parse(resultText);
+    } catch {
+      const match = resultText.match(/\{[\s\S]*\}/);
+      if (match) parsed = JSON.parse(match[0]);
+    }
+
+    const titlesList = parsed.discovered_titles || parsed.discovered_movies || parsed.recommendations || [];
+    const movies: Movie[] = [];
+
+    for (let i = 0; i < titlesList.length; i++) {
+      const item = titlesList[i];
+      if (!item.title) continue;
+
+      const cleanTitle = item.title.trim();
+      const year = item.year || 2023;
+      const safeId = item.id || `live_${cleanTitle.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${year}`;
+
+      movies.push({
+        id: safeId,
+        title: cleanTitle,
+        year: typeof year === 'number' ? year : parseInt(year) || 2023,
+        contentType: ['movie', 'series', 'anime', 'documentary', 'limited_series'].includes(item.contentType) 
+          ? item.contentType 
+          : 'movie',
+        rating: Math.min(10, Math.max(1, Number(item.rating) || 7.5)),
+        voteCount: Number(item.voteCount) || 1000,
+        runtime: Number(item.runtime) || (item.contentType === 'movie' ? 115 : 45),
+        seasons: item.seasons ? Number(item.seasons) : undefined,
+        episodes: item.episodes ? Number(item.episodes) : undefined,
+        seriesStatus: item.seriesStatus || 'any',
+        genres: Array.isArray(item.genres) ? item.genres : ['Drama'],
+        moods: Array.isArray(item.moods) ? item.moods : ['engaging'],
+        pace: ['slow', 'medium', 'fast'].includes(item.pace) ? item.pace : 'medium',
+        languages: Array.isArray(item.languages) ? item.languages : ['English'],
+        countries: Array.isArray(item.countries) ? item.countries : ['United States'],
+        synopsis: item.synopsis || `Discovered via live Google Search for "${userMessage}".`,
+        posterUrl: item.posterUrl || '',
+        backdropUrl: item.backdropUrl || '',
+        cast: Array.isArray(item.cast) ? item.cast : [],
+        platforms: Array.isArray(item.platforms) && item.platforms.length > 0 ? item.platforms : ['Netflix', 'Prime Video']
+      });
+    }
+
+    console.log(`[Google Live Search] Discovered ${movies.length} live candidates for query: "${userMessage}"`);
+    return movies;
+  } catch (err: any) {
+    if (err?.message === 'GEMINI_RATE_LIMIT_EXHAUSTED' || String(err).includes('RESOURCE_EXHAUSTED') || String(err).includes('429')) {
+      console.log('[Google Live Search] Rate limit/quota reached. Falling back to local candidate database.');
+    } else {
+      console.log('[Google Live Search] Notice:', err?.message || err);
+    }
     return [];
   }
 }
@@ -255,21 +520,28 @@ app.post('/api/extract-filters', async (req, res) => {
       }
     `;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-      },
-    });
+    let parsedFilters: SearchFilters;
+    try {
+      const response = await callGeminiWithRetry({
+        model: 'gemini-3.6-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+        },
+      }, 1, 1000);
 
-    const resultText = response.text || '{}';
-    const parsedFilters = JSON.parse(resultText.trim());
+      const resultText = response.text || '{}';
+      parsedFilters = JSON.parse(resultText.trim());
+    } catch (apiErr) {
+      console.warn('[Filter Extraction] Gemini API rate limited or quota exhausted, falling back to local extractor:', apiErr);
+      parsedFilters = extractLocalFilters(user_message, existing_preferences);
+    }
 
-    res.json({ filters: parsedFilters, clarifying_question: parsedFilters.clarifying_question });
+    res.json({ filters: parsedFilters, clarifying_question: parsedFilters.clarifying_question || null });
   } catch (error) {
     console.error('Error in Filter Extraction:', error);
-    res.status(500).json({ error: 'Failed to extract search filters' });
+    const fallbackFilters = extractLocalFilters(user_message, existing_preferences);
+    res.json({ filters: fallbackFilters, clarifying_question: null });
   }
 });
 
@@ -282,11 +554,21 @@ app.post('/api/rank-candidates', async (req, res) => {
   }
 
   try {
-    // 1. Gather all candidate movies
-    // We combine our pre-populated curatedMovies with any titles retrieved from API
-    let candidates: Movie[] = [...curatedMovies];
+    const filters = user_filters as SearchFilters;
 
-    // If external candidates are passed, we add them (avoiding duplicates)
+    // 1. Live Google Search for candidate titles based on active filters
+    const filterQueryContext = [
+      ...(filters.genres || []),
+      ...(filters.moods || []),
+      ...(filters.themes || []),
+      ...(filters.similar_to_titles || [])
+    ].join(' ');
+
+    const liveCandidates = await searchLiveMoviesWithGoogle(filterQueryContext || 'trending movies and series', filters);
+
+    // Combine live Google search candidates, external candidate_titles, and curated list
+    let candidates: Movie[] = [...liveCandidates];
+
     if (Array.isArray(candidate_titles) && candidate_titles.length > 0) {
       candidate_titles.forEach((c: any) => {
         if (!candidates.some(existing => existing.title.toLowerCase() === c.title.toLowerCase())) {
@@ -295,8 +577,13 @@ app.post('/api/rank-candidates', async (req, res) => {
       });
     }
 
+    curatedMovies.forEach(cm => {
+      if (!candidates.some(existing => existing.title.toLowerCase() === cm.title.toLowerCase())) {
+        candidates.push(cm);
+      }
+    });
+
     // 2. Candidate Validation & Preliminary Filtering
-    const filters = user_filters as SearchFilters;
     let validatedCandidates = candidates.filter(movie => {
       // Content exclusions check
       if (filters.content_exclusions && filters.content_exclusions.length > 0) {
@@ -436,16 +723,22 @@ app.post('/api/rank-candidates', async (req, res) => {
       }
     `;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-      },
-    });
+    let rankedResponse: any;
+    try {
+      const response = await callGeminiWithRetry({
+        model: 'gemini-3.6-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+        },
+      }, 1, 1000);
 
-    const resultText = response.text || '{}';
-    const rankedResponse = JSON.parse(resultText.trim());
+      const resultText = response.text || '{}';
+      rankedResponse = JSON.parse(resultText.trim());
+    } catch (apiErr) {
+      console.warn('[Candidate Ranking] Gemini API rate limited or quota exhausted, using local scorer fallback:', apiErr);
+      rankedResponse = generateFallbackRecommendations('', filters, validatedCandidates);
+    }
 
     // Resolve details and accurate poster/backdrop images for the recommendations
     const movieDetails: Record<string, Movie> = {};
@@ -493,7 +786,8 @@ app.post('/api/rank-candidates', async (req, res) => {
     res.json(rankedResponse);
   } catch (error) {
     console.error('Error in Candidate Ranking:', error);
-    res.status(500).json({ error: 'Failed to rank candidates' });
+    const fallback = generateFallbackRecommendations('', user_filters || {}, curatedMovies);
+    res.json(fallback);
   }
 });
 
@@ -547,34 +841,53 @@ app.post('/api/discover', async (req, res) => {
       }
     `;
 
-    const filterResponse = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
-      contents: filterPrompt,
-      config: {
-        responseMimeType: 'application/json',
-      },
-    });
+    let filters: SearchFilters;
+    try {
+      const filterResponse = await callGeminiWithRetry({
+        model: 'gemini-3.6-flash',
+        contents: filterPrompt,
+        config: {
+          responseMimeType: 'application/json',
+        },
+      }, 1, 1000);
 
-    const filters = JSON.parse((filterResponse.text || '{}').trim());
+      filters = JSON.parse((filterResponse.text || '{}').trim());
+    } catch (filterErr: any) {
+      if (filterErr?.message === 'GEMINI_RATE_LIMIT_EXHAUSTED' || String(filterErr).includes('429')) {
+        console.log('[Discover Pipeline] Rate limit/quota reached on filter extraction, using local extractor.');
+      } else {
+        console.log('[Discover Pipeline] Filter extraction notice:', filterErr?.message || filterErr);
+      }
+      filters = extractLocalFilters(user_message, existing_preferences);
+    }
 
     // If there is a clarifying question, return immediately
     if (filters.clarifying_question) {
       return res.json({ filters, recommendations: null });
     }
 
-    // Step 2: Retrieve candidate titles
-    // We try to query TMDB if a key exists using keywords extracted from themes/similar_to_titles/genres
+    // Step 2: Retrieve candidate titles live from Google Search grounding
+    const liveGoogleCandidates = await searchLiveMoviesWithGoogle(user_message, filters);
+
+    // Also query TMDB if API key is configured
     let apiCandidates: Movie[] = [];
     const searchQuery = [...(filters.similar_to_titles || []), ...(filters.themes || []), ...(filters.genres || [])].join(' ');
     if (searchQuery && process.env.TMDB_API_KEY) {
       apiCandidates = await fetchFromTMDB(searchQuery);
     }
 
-    // Combine local and API candidates
-    let candidates: Movie[] = [...curatedMovies];
+    // Combine live Google Search results, TMDB candidates, and curated fallback list
+    let candidates: Movie[] = [...liveGoogleCandidates];
+
     apiCandidates.forEach(ac => {
       if (!candidates.some(c => c.title.toLowerCase() === ac.title.toLowerCase())) {
         candidates.push(ac);
+      }
+    });
+
+    curatedMovies.forEach(cm => {
+      if (!candidates.some(c => c.title.toLowerCase() === cm.title.toLowerCase())) {
+        candidates.push(cm);
       }
     });
 
@@ -692,15 +1005,25 @@ app.post('/api/discover', async (req, res) => {
       }
     `;
 
-    const rankingResponse = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
-      contents: rankingPrompt,
-      config: {
-        responseMimeType: 'application/json',
-      },
-    });
+    let recommendations: any;
+    try {
+      const rankingResponse = await callGeminiWithRetry({
+        model: 'gemini-3.6-flash',
+        contents: rankingPrompt,
+        config: {
+          responseMimeType: 'application/json',
+        },
+      }, 1, 1000);
 
-    const recommendations = JSON.parse((rankingResponse.text || '{}').trim());
+      recommendations = JSON.parse((rankingResponse.text || '{}').trim());
+    } catch (rankErr: any) {
+      if (rankErr?.message === 'GEMINI_RATE_LIMIT_EXHAUSTED' || String(rankErr).includes('429')) {
+        console.log('[Discover Pipeline] Rate limit/quota reached on ranking, using local candidate scorer fallback.');
+      } else {
+        console.log('[Discover Pipeline] Ranking notice:', rankErr?.message || rankErr);
+      }
+      recommendations = generateFallbackRecommendations(user_message, filters, filtered);
+    }
 
     // Resolve details and accurate poster/backdrop images for the recommendations
     const movieDetails: Record<string, Movie> = {};
@@ -748,7 +1071,9 @@ app.post('/api/discover', async (req, res) => {
     res.json({ filters, recommendations });
   } catch (error) {
     console.error('Error in discover pipeline:', error);
-    res.status(500).json({ error: 'Failed discovery request' });
+    const fallbackFilters = extractLocalFilters(user_message, existing_preferences);
+    const fallbackRecs = generateFallbackRecommendations(user_message, fallbackFilters, curatedMovies);
+    res.json({ filters: fallbackFilters, recommendations: fallbackRecs });
   }
 });
 

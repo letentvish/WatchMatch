@@ -6,7 +6,7 @@ import ResultsView from './components/ResultsView';
 import MovieDetailModal from './components/MovieDetailModal';
 import ProfileView from './components/ProfileView';
 import { SearchFilters, RecommendationResponse, TasteProfile, Movie } from './types';
-import { Sparkles, ArrowLeft, RefreshCw, Bookmark, Heart, Sliders } from 'lucide-react';
+import { Sparkles, ArrowLeft, RefreshCw, Bookmark, Heart, Sliders, CheckCircle2 } from 'lucide-react';
 import { curatedMovies } from './data/curatedMovies';
 import { getCleanImageUrl, handleImageLoadError } from './utils/imageHelper';
 
@@ -23,13 +23,18 @@ export default function App() {
     const saved = localStorage.getItem('watchmatch_taste_profile');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        return {
+          ...parsed,
+          watched: parsed.watched || [],
+        };
       } catch (e) {
         console.error('Failed to parse local taste profile', e);
       }
     }
     return {
       watchlist: [],
+      watched: [],
       liked: [],
       disliked: [],
       notInterested: [],
@@ -122,6 +127,18 @@ export default function App() {
     }
   };
 
+  // Add/Remove Movie to Watched list
+  const handleToggleWatched = (movieId: string) => {
+    setTasteProfile(prev => {
+      const watched = prev.watched || [];
+      const exists = watched.includes(movieId);
+      const updated = exists
+        ? watched.filter(id => id !== movieId)
+        : [...watched, movieId];
+      return { ...prev, watched: updated };
+    });
+  };
+
   // Add/Remove Movie to Watchlist
   const handleToggleWatchlist = (movie: Movie) => {
     setTasteProfile(prev => {
@@ -181,9 +198,10 @@ export default function App() {
 
   // Reset entire Taste Profile state
   const handleResetTasteProfile = () => {
-    if (window.confirm('Clear all your saved watchlist, likes, and customized taste profile?')) {
+    if (window.confirm('Clear all your saved watchlist, watched history, likes, and customized taste profile?')) {
       setTasteProfile({
         watchlist: [],
+        watched: [],
         liked: [],
         disliked: [],
         notInterested: [],
@@ -202,6 +220,10 @@ export default function App() {
     setTasteProfile(prev => ({ ...prev, watchlist: prev.watchlist.filter(x => x !== id) }));
   };
 
+  const handleRemoveFromWatched = (id: string) => {
+    setTasteProfile(prev => ({ ...prev, watched: (prev.watched || []).filter(x => x !== id) }));
+  };
+
   const handleRemoveFromLikes = (id: string) => {
     setTasteProfile(prev => ({ ...prev, liked: prev.liked.filter(x => x !== id) }));
   };
@@ -211,7 +233,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-wm-bg text-wm-text-main flex flex-col font-sans">
       {/* Navigation */}
       <Navbar 
         currentView={currentView} 
@@ -227,15 +249,15 @@ export default function App() {
         {/* Error / Conversational Prompt Banner */}
         {errorMsg && (
           <div className="max-w-4xl mx-auto px-4 mt-6">
-            <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 p-5 rounded-2xl flex items-start space-x-3 text-amber-300">
-              <Sparkles className="w-5 h-5 flex-shrink-0 mt-0.5 animate-pulse" />
+            <div className="bg-wm-card border border-amber-800/60 p-5 rounded-xl flex items-start space-x-3 text-amber-300 shadow-lg">
+              <Sparkles className="w-5 h-5 flex-shrink-0 mt-0.5 animate-pulse text-wm-accent" />
               <div className="space-y-2 flex-1">
-                <span className="font-mono text-xs font-bold uppercase tracking-wider block text-amber-400">Scout Reflection Required</span>
+                <span className="font-mono text-xs font-bold uppercase tracking-wider block text-wm-accent">Scout Reflection Required</span>
                 <p className="text-sm leading-relaxed">{errorMsg}</p>
                 <div className="flex space-x-2 pt-1">
                   <button
                     onClick={() => setErrorMsg(null)}
-                    className="text-xs font-bold text-slate-300 hover:text-white bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700/60"
+                    className="text-xs font-bold text-gray-300 hover:text-white bg-black/50 px-3 py-1.5 rounded-lg border border-gray-800"
                   >
                     Close Banner
                   </button>
@@ -258,12 +280,12 @@ export default function App() {
                       setActiveRecommendations(null);
                       setActiveFilters(null);
                     }}
-                    className="flex items-center space-x-1.5 text-xs text-slate-400 hover:text-white bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl transition font-medium"
+                    className="flex items-center space-x-1.5 text-xs text-gray-400 hover:text-white bg-wm-card border border-gray-800 px-3 py-2 rounded-lg transition font-medium"
                   >
                     <ArrowLeft className="w-4 h-4" />
                     <span>Back to Search</span>
                   </button>
-                  <span className="text-xs text-slate-500 font-mono">
+                  <span className="text-xs text-gray-500 font-mono">
                     Structured query successfully executed
                   </span>
                 </div>
@@ -277,6 +299,8 @@ export default function App() {
                   }}
                   onNotInterested={handleNotInterested}
                   watchlistIds={tasteProfile.watchlist}
+                  watchedIds={tasteProfile.watched || []}
+                  onToggleWatched={handleToggleWatched}
                   onRefine={handleRefine}
                 />
               </div>
@@ -303,6 +327,8 @@ export default function App() {
             onRemoveFromWatchlist={handleRemoveFromWatchlist}
             onRemoveFromLikes={handleRemoveFromLikes}
             onRemoveFromDislikes={handleRemoveFromDislikes}
+            onRemoveFromWatched={handleRemoveFromWatched}
+            onToggleWatched={handleToggleWatched}
             onResetTasteProfile={handleResetTasteProfile}
             onMovieClick={(movie) => setSelectedMovie(movie)}
           />
@@ -310,9 +336,14 @@ export default function App() {
 
         {currentView === 'watchlist' && (
           <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-            <div className="flex items-center space-x-2 border-b border-slate-800 pb-3">
-              <Bookmark className="w-6 h-6 text-emerald-400" />
-              <h2 className="text-2xl font-sans font-bold text-white tracking-tight">Your Watchlist</h2>
+            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+              <div className="flex items-center space-x-2">
+                <Bookmark className="w-6 h-6 text-wm-accent" />
+                <h2 className="text-2xl font-bold text-white tracking-tight">Your Watchlist</h2>
+              </div>
+              <span className="text-xs bg-wm-card border border-gray-800 text-gray-400 font-mono px-3 py-1 rounded-full font-bold">
+                {tasteProfile.watchlist.length} Saved
+              </span>
             </div>
             
             {tasteProfile.watchlist.length > 0 ? (
@@ -320,43 +351,69 @@ export default function App() {
                 {tasteProfile.watchlist.map(id => {
                   const movie = curatedMovies.find(m => m.id === id);
                   if (!movie) return null;
+                  const isWatched = (tasteProfile.watched || []).includes(movie.id);
+
                   return (
                     <div 
                       key={movie.id}
-                      className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden shadow-md flex transition duration-300 hover:border-slate-700"
+                      className="bg-wm-card border border-gray-800 rounded-xl overflow-hidden shadow-md flex transition duration-300 hover:border-gray-700 relative group"
                     >
                       <img 
                         src={getCleanImageUrl(movie.posterUrl, 'poster')} 
                         alt={movie.title}
                         referrerPolicy="no-referrer"
-                        className="w-24 h-32 object-cover border-r border-slate-800"
+                        className="w-24 h-36 object-cover border-r border-gray-800 flex-shrink-0"
                         onError={(e) => handleImageLoadError(e, movie.backdropUrl)}
                       />
                       <div className="p-4 flex-1 flex flex-col justify-between">
                         <div>
-                          <h4 
-                            onClick={() => setSelectedMovie(movie)}
-                            className="text-base font-sans font-bold text-white hover:text-amber-400 cursor-pointer truncate transition"
-                          >
-                            {movie.title}
-                          </h4>
-                          <span className="text-slate-400 text-xs font-mono block mt-0.5">
-                            {movie.year} · ★{movie.rating}
+                          <div className="flex items-start justify-between gap-2">
+                            <h4 
+                              onClick={() => setSelectedMovie(movie)}
+                              className="text-base font-bold text-white hover:text-wm-accent cursor-pointer truncate transition"
+                            >
+                              {movie.title}
+                            </h4>
+                            {isWatched && (
+                              <span className="bg-emerald-600/20 text-emerald-400 border border-emerald-600/40 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center space-x-1 flex-shrink-0">
+                                <CheckCircle2 className="w-3 h-3" />
+                                <span>Watched</span>
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-gray-400 text-xs font-mono block mt-0.5">
+                            {movie.year} · ★{movie.rating} · <span className="capitalize">{movie.contentType}</span>
                           </span>
                         </div>
-                        <div className="flex justify-between items-center pt-2">
+                        <div className="flex justify-between items-center pt-3 border-t border-gray-800/80 mt-2">
                           <button
                             onClick={() => setSelectedMovie(movie)}
-                            className="text-xs text-amber-400 hover:text-amber-300 font-mono font-bold"
+                            className="text-xs text-wm-accent hover:text-red-400 font-mono font-bold"
                           >
                             Details &rarr;
                           </button>
-                          <button
-                            onClick={() => handleRemoveFromWatchlist(movie.id)}
-                            className="text-slate-500 hover:text-rose-400 text-xs font-bold px-2 py-1 rounded"
-                          >
-                            Remove
-                          </button>
+
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => handleToggleWatched(movie.id)}
+                              className={`text-xs font-bold px-2.5 py-1 rounded flex items-center space-x-1 border transition ${
+                                isWatched 
+                                  ? 'bg-emerald-950/60 text-emerald-300 border-emerald-700' 
+                                  : 'bg-black/50 text-gray-400 border-gray-800 hover:text-white hover:border-gray-700'
+                              }`}
+                              title={isWatched ? 'Mark unwatched' : 'Mark watched'}
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>{isWatched ? 'Watched' : 'Mark Watched'}</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleRemoveFromWatchlist(movie.id)}
+                              className="text-gray-500 hover:text-wm-accent text-xs font-bold px-2 py-1 rounded transition"
+                            >
+                              Remove
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -364,15 +421,15 @@ export default function App() {
                 })}
               </div>
             ) : (
-              <div className="text-center py-16 bg-slate-900/20 border border-dashed border-slate-800 rounded-3xl">
-                <Bookmark className="w-12 h-12 text-slate-700 mx-auto mb-4" />
-                <h3 className="text-white font-sans font-bold">Your watchlist is pristine and waiting.</h3>
-                <p className="text-slate-400 text-sm mt-1 max-w-sm mx-auto">
+              <div className="text-center py-16 bg-wm-card/30 border border-dashed border-gray-800 rounded-xl">
+                <Bookmark className="w-12 h-12 text-gray-700 mx-auto mb-4" />
+                <h3 className="text-white font-bold">Your watchlist is pristine and waiting.</h3>
+                <p className="text-gray-400 text-sm mt-1 max-w-sm mx-auto">
                   Ask WatchMatch or visually configure filters to build your shortlist of highly curated movies.
                 </p>
                 <button
                   onClick={() => setCurrentView('discover')}
-                  className="mt-6 bg-gradient-to-r from-amber-500 to-rose-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-xs hover:scale-105 transition"
+                  className="mt-6 bg-wm-accent hover:bg-red-700 text-white font-bold px-6 py-2.5 rounded-lg text-xs hover:scale-105 transition"
                 >
                   Start Discovery
                 </button>
@@ -392,6 +449,8 @@ export default function App() {
             handleAddToLikes(movie);
           }}
           watchlistIds={tasteProfile.watchlist}
+          watchedIds={tasteProfile.watched || []}
+          onToggleWatched={handleToggleWatched}
           onMovieClick={(movie) => setSelectedMovie(movie)}
         />
       )}

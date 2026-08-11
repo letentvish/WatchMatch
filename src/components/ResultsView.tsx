@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Play, Plus, Check, Trash, AlertTriangle, EyeOff, Film, HelpCircle, Flame, Star, Hourglass } from 'lucide-react';
+import { Sparkles, Play, Plus, Check, CheckCircle2, Trash, AlertTriangle, EyeOff, Film, HelpCircle, Flame, Star, Hourglass } from 'lucide-react';
 import { RecommendationResponse, Movie } from '../types';
 import { curatedMovies } from '../data/curatedMovies';
 import { getCleanImageUrl, handleImageLoadError } from '../utils/imageHelper';
@@ -10,6 +10,8 @@ interface ResultsViewProps {
   onAddToWatchlist: (movie: Movie) => void;
   onNotInterested: (movieId: string) => void;
   watchlistIds: string[];
+  watchedIds?: string[];
+  onToggleWatched?: (movieId: string) => void;
   onRefine: (refinementText: string) => void;
 }
 
@@ -19,6 +21,8 @@ export default function ResultsView({
   onAddToWatchlist,
   onNotInterested,
   watchlistIds,
+  watchedIds = [],
+  onToggleWatched,
   onRefine,
 }: ResultsViewProps) {
   // Helper to find full movie details from curated list, or return a basic structure if custom TMDB result
@@ -72,11 +76,11 @@ export default function ResultsView({
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-12">
       {/* Top Summary Banner */}
       {recommendations.summary && (
-        <div className="bg-gradient-to-r from-slate-900 to-indigo-950/40 border border-slate-800 p-6 rounded-2xl shadow-xl flex items-start space-x-4">
-          <Sparkles className="w-6 h-6 text-amber-400 flex-shrink-0 mt-0.5 animate-pulse" />
+        <div className="bg-wm-card border border-gray-800 p-6 rounded-xl shadow-xl flex items-start space-x-4">
+          <Sparkles className="w-6 h-6 text-wm-accent flex-shrink-0 mt-0.5 animate-pulse" />
           <div className="space-y-1">
-            <h3 className="font-sans font-bold text-white text-base">Your Personal Movie Scout's Assessment</h3>
-            <p className="text-slate-300 text-sm leading-relaxed">{recommendations.summary}</p>
+            <h3 className="font-bold text-white text-base">Your Personal Movie Scout's Assessment</h3>
+            <p className="text-gray-300 text-sm leading-relaxed">{recommendations.summary}</p>
           </div>
         </div>
       )}
@@ -85,11 +89,11 @@ export default function ResultsView({
       {bestMatchMovie && (
         <div className="space-y-4" id="best-match-hero-container">
           <div className="flex items-center space-x-2">
-            <Flame className="w-5 h-5 text-rose-500" />
-            <h2 className="text-xl font-sans font-bold text-white tracking-tight">Best Overall Match</h2>
+            <Flame className="w-5 h-5 text-wm-accent" />
+            <h2 className="text-xl font-bold text-white tracking-tight">Best Overall Match</h2>
           </div>
 
-          <div className="relative overflow-hidden bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl shadow-2xl flex flex-col md:flex-row group">
+          <div className="relative overflow-hidden bg-wm-card border border-gray-800 rounded-2xl shadow-2xl flex flex-col md:flex-row group">
             {/* Poster / Backdrop Section */}
             <div className="relative w-full md:w-2/5 h-64 md:h-auto min-h-[300px] overflow-hidden">
               <img 
@@ -99,16 +103,22 @@ export default function ResultsView({
                 className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
                 onError={(e) => handleImageLoadError(e, bestMatchMovie.backdropUrl)}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-wm-card via-wm-card/40 to-transparent"></div>
               
               {/* Overlay Badges */}
               <div className="absolute top-4 left-4 flex flex-col space-y-2">
-                <span className="bg-rose-500 text-white font-sans font-extrabold text-[11px] px-3 py-1 rounded-full uppercase tracking-wider shadow">
+                <span className="bg-wm-accent text-white font-extrabold text-[11px] px-3 py-1 rounded-full uppercase tracking-wider shadow">
                   {recommendations.best_match.match_score}% Match
                 </span>
-                <span className="bg-slate-900/95 text-slate-300 border border-slate-800 font-mono text-[10px] px-2.5 py-1 rounded-full font-bold">
+                <span className="bg-black/90 text-gray-300 border border-gray-800 font-mono text-[10px] px-2.5 py-1 rounded-full font-bold">
                   {recommendations.best_match.watch_commitment}
                 </span>
+                {watchedIds.includes(bestMatchMovie.id) && (
+                  <span className="bg-emerald-600 text-white font-extrabold text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider shadow flex items-center space-x-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>Watched</span>
+                  </span>
+                )}
               </div>
             </div>
 
@@ -118,42 +128,42 @@ export default function ResultsView({
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 
-                      className="text-2xl md:text-3xl font-sans font-black text-white hover:text-amber-400 cursor-pointer transition"
+                      className="text-2xl md:text-3xl font-black text-white hover:text-wm-accent cursor-pointer transition"
                       onClick={() => onMovieClick(bestMatchMovie)}
                       id="best-match-title"
                     >
                       {bestMatchMovie.title}
                     </h3>
-                    <div className="flex items-center space-x-2 text-slate-400 text-xs font-mono font-bold mt-1">
+                    <div className="flex items-center space-x-2 text-gray-400 text-xs font-mono font-bold mt-1">
                       <span>{bestMatchMovie.year}</span>
                       <span>•</span>
                       <span className="text-amber-400 flex items-center"><Star className="w-3.5 h-3.5 fill-amber-400 mr-0.5" />{bestMatchMovie.rating}</span>
                       <span>•</span>
-                      <span className="uppercase text-[10px] bg-slate-800 border border-slate-700/60 px-2 py-0.5 rounded-md text-slate-300">{bestMatchMovie.contentType}</span>
+                      <span className="uppercase text-[10px] bg-black/60 border border-gray-800 px-2 py-0.5 rounded-md text-gray-300">{bestMatchMovie.contentType}</span>
                     </div>
                   </div>
                 </div>
 
-                <p className="text-slate-400 text-sm leading-relaxed line-clamp-3">
+                <p className="text-gray-300 text-sm leading-relaxed line-clamp-3">
                   {bestMatchMovie.synopsis}
                 </p>
 
                 {/* Genres */}
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {bestMatchMovie.genres.map(g => (
-                    <span key={g} className="text-[10px] font-bold font-sans bg-slate-800 border border-slate-700/60 text-slate-300 px-2 py-0.5 rounded-full uppercase">
+                    <span key={g} className="text-[10px] font-bold bg-black/50 border border-gray-800 text-gray-300 px-2.5 py-1 rounded-md uppercase">
                       {g}
                     </span>
                   ))}
                 </div>
 
                 {/* Match Explanations */}
-                <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-4 space-y-2 mt-4">
-                  <span className="text-xs font-bold font-mono text-emerald-400 uppercase tracking-wider block">Why it fits you:</span>
+                <div className="bg-black/40 border border-gray-800/80 rounded-xl p-4 space-y-2 mt-4">
+                  <span className="text-xs font-bold font-mono text-wm-accent uppercase tracking-wider block">Why it fits you:</span>
                   <ul className="space-y-1.5">
                     {recommendations.best_match.why_it_matches.map((bullet, idx) => (
-                      <li key={idx} className="text-slate-300 text-xs flex items-start space-x-2">
-                        <span className="text-emerald-400 flex-shrink-0 font-bold mt-0.5">&bull;</span>
+                      <li key={idx} className="text-gray-300 text-xs flex items-start space-x-2">
+                        <span className="text-wm-accent flex-shrink-0 font-bold mt-0.5">&bull;</span>
                         <span className="leading-relaxed">{bullet}</span>
                       </li>
                     ))}
@@ -162,8 +172,8 @@ export default function ResultsView({
 
                 {/* Possible Mismatch Warnings */}
                 {recommendations.best_match.possible_mismatch && (
-                  <div className="flex items-center space-x-2 text-amber-400/90 bg-amber-500/5 border border-amber-500/20 px-3.5 py-2.5 rounded-xl text-xs">
-                    <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                  <div className="flex items-center space-x-2 text-amber-400 bg-amber-950/20 border border-amber-800/50 px-3.5 py-2.5 rounded-xl text-xs">
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0 text-amber-400" />
                     <span><strong>Caveat:</strong> {recommendations.best_match.possible_mismatch}</span>
                   </div>
                 )}
@@ -173,23 +183,23 @@ export default function ResultsView({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap gap-3 pt-4 border-t border-slate-800/80">
+              <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-800">
                 <button
                   id="best-match-trailer-btn"
                   onClick={() => onMovieClick(bestMatchMovie)}
-                  className="flex-1 min-w-[130px] bg-amber-500 hover:bg-amber-600 text-slate-950 hover:text-black font-extrabold text-xs px-4 py-3 rounded-xl flex items-center justify-center space-x-1.5 transition"
+                  className="flex-1 min-w-[120px] bg-wm-accent hover:bg-red-700 text-white font-extrabold text-xs px-4 py-3 rounded-lg flex items-center justify-center space-x-1.5 transition"
                 >
-                  <Play className="w-4 h-4 fill-slate-950" />
+                  <Play className="w-4 h-4 fill-white" />
                   <span>Watch Trailer</span>
                 </button>
 
                 <button
                   id="best-match-watchlist-btn"
                   onClick={() => onAddToWatchlist(bestMatchMovie)}
-                  className={`flex-1 min-w-[130px] font-bold text-xs px-4 py-3 rounded-xl flex items-center justify-center space-x-1.5 transition border ${
+                  className={`flex-1 min-w-[120px] font-bold text-xs px-4 py-3 rounded-lg flex items-center justify-center space-x-1.5 transition border ${
                     watchlistIds.includes(bestMatchMovie.id)
-                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                      : 'bg-slate-900 text-white border-slate-800 hover:border-slate-700 hover:bg-slate-800'
+                      ? 'bg-emerald-950/80 text-emerald-300 border-emerald-700'
+                      : 'bg-wm-card text-white border-gray-800 hover:border-gray-700 hover:bg-wm-card-hover'
                   }`}
                 >
                   {watchlistIds.includes(bestMatchMovie.id) ? (
@@ -205,10 +215,26 @@ export default function ResultsView({
                   )}
                 </button>
 
+                {onToggleWatched && (
+                  <button
+                    id="best-match-watched-btn"
+                    onClick={() => onToggleWatched(bestMatchMovie.id)}
+                    className={`flex-1 min-w-[120px] font-bold text-xs px-4 py-3 rounded-lg flex items-center justify-center space-x-1.5 transition border ${
+                      watchedIds.includes(bestMatchMovie.id)
+                        ? 'bg-emerald-600/20 text-emerald-300 border-emerald-600'
+                        : 'bg-wm-card text-gray-300 border-gray-800 hover:border-gray-700 hover:bg-wm-card-hover'
+                    }`}
+                    title={watchedIds.includes(bestMatchMovie.id) ? 'Mark as unwatched' : 'Mark as watched'}
+                  >
+                    <CheckCircle2 className={`w-4 h-4 ${watchedIds.includes(bestMatchMovie.id) ? 'text-emerald-400 fill-emerald-400/20' : ''}`} />
+                    <span>{watchedIds.includes(bestMatchMovie.id) ? 'Watched' : 'Mark Watched'}</span>
+                  </button>
+                )}
+
                 <button
                   id="best-match-dismiss-btn"
                   onClick={() => onNotInterested(bestMatchMovie.id)}
-                  className="text-slate-500 hover:text-rose-400 bg-slate-900 border border-slate-800 hover:border-rose-500/20 p-3 rounded-xl transition"
+                  className="text-gray-400 hover:text-wm-accent bg-wm-card border border-gray-800 hover:border-red-900/50 p-3 rounded-lg transition"
                   title="Not interested"
                 >
                   <EyeOff className="w-4 h-4" />
@@ -223,8 +249,8 @@ export default function ResultsView({
       {otherRecs.length > 0 && (
         <div className="space-y-6">
           <div className="flex items-center space-x-2">
-            <Film className="w-5 h-5 text-purple-400" />
-            <h2 className="text-xl font-sans font-bold text-white tracking-tight">Other Custom Matches</h2>
+            <Film className="w-5 h-5 text-wm-accent" />
+            <h2 className="text-xl font-bold text-white tracking-tight">Other Custom Matches</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -233,12 +259,13 @@ export default function ResultsView({
               if (!movie) return null;
               
               const isInWatchlist = watchlistIds.includes(movie.id);
+              const isWatched = watchedIds.includes(movie.id);
 
               return (
                 <div 
                   id={`rec-card-${index}`}
                   key={movie.id} 
-                  className="bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden shadow-lg flex flex-col justify-between group"
+                  className="bg-wm-card border border-gray-800 rounded-xl overflow-hidden shadow-lg flex flex-col justify-between group hover:border-gray-700 transition"
                 >
                   {/* Backdrop Header */}
                   <div className="relative h-44 overflow-hidden">
@@ -249,28 +276,34 @@ export default function ResultsView({
                       className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
                       onError={(e) => handleImageLoadError(e, movie.posterUrl)}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-wm-card via-wm-card/40 to-transparent"></div>
                     
                     {/* Floating labels */}
                     <div className="absolute top-3 left-3 flex flex-col space-y-1">
-                      <span className="bg-indigo-600 text-white font-sans font-bold text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                      <span className="bg-wm-accent text-white font-bold text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                         {rec.match_score}% Match
                       </span>
                       {rec.recommended_for && (
-                        <span className="bg-amber-500/95 text-slate-950 font-mono text-[9px] px-2 py-0.5 rounded-md font-extrabold uppercase">
+                        <span className="bg-white text-black font-mono text-[9px] px-2 py-0.5 rounded-md font-extrabold uppercase">
                           {rec.recommended_for}
+                        </span>
+                      )}
+                      {isWatched && (
+                        <span className="bg-emerald-600 text-white font-extrabold text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider shadow flex items-center space-x-1">
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>Watched</span>
                         </span>
                       )}
                     </div>
 
                     <div className="absolute bottom-3 left-3">
                       <h4 
-                        className="text-lg font-sans font-black text-white hover:text-amber-400 cursor-pointer transition-colors"
+                        className="text-lg font-black text-white hover:text-wm-accent cursor-pointer transition-colors"
                         onClick={() => onMovieClick(movie)}
                       >
                         {movie.title}
                       </h4>
-                      <div className="flex items-center space-x-2 text-slate-300 text-xs font-mono font-medium mt-0.5">
+                      <div className="flex items-center space-x-2 text-gray-300 text-xs font-mono font-medium mt-0.5">
                         <span>{movie.year}</span>
                         <span>•</span>
                         <span className="text-amber-400 flex items-center"><Star className="w-3 h-3 fill-amber-400 mr-0.5" />{movie.rating}</span>
@@ -284,10 +317,10 @@ export default function ResultsView({
                   <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
                     <div className="space-y-3">
                       {/* Short Why It Matches list */}
-                      <div className="space-y-1 bg-slate-950/40 p-3 rounded-xl border border-slate-800/60">
+                      <div className="space-y-1 bg-black/40 p-3 rounded-lg border border-gray-800">
                         {rec.why_it_matches.slice(0, 3).map((w, idx) => (
-                          <div key={idx} className="text-slate-300 text-xs flex items-start space-x-1.5">
-                            <span className="text-emerald-400 font-bold">&bull;</span>
+                          <div key={idx} className="text-gray-300 text-xs flex items-start space-x-1.5">
+                            <span className="text-wm-accent font-bold">&bull;</span>
                             <span className="line-clamp-2 leading-relaxed">{w}</span>
                           </div>
                         ))}
@@ -295,7 +328,7 @@ export default function ResultsView({
 
                       {/* Warning */}
                       {rec.possible_mismatch && (
-                        <div className="text-[11px] text-amber-400 flex items-center space-x-1.5 bg-amber-500/5 px-2.5 py-1.5 rounded-lg border border-amber-500/10">
+                        <div className="text-[11px] text-amber-400 flex items-center space-x-1.5 bg-amber-950/20 px-2.5 py-1.5 rounded-lg border border-amber-800/40">
                           <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
                           <span className="line-clamp-2"><strong>Caveat:</strong> {rec.possible_mismatch}</span>
                         </div>
@@ -303,22 +336,36 @@ export default function ResultsView({
                     </div>
 
                     {/* Actions */}
-                    <div className="pt-4 border-t border-slate-800 flex items-center justify-between gap-2 mt-4">
+                    <div className="pt-4 border-t border-gray-800 flex items-center justify-between gap-2 mt-4">
                       <button
                         onClick={() => onMovieClick(movie)}
-                        className="text-xs text-amber-400 hover:text-amber-300 font-mono font-bold uppercase tracking-wider flex items-center space-x-1 px-2 py-1 rounded-lg hover:bg-amber-500/5"
+                        className="text-xs text-wm-accent hover:text-red-400 font-mono font-bold uppercase tracking-wider flex items-center space-x-1 px-2 py-1 rounded-lg hover:bg-wm-card-hover"
                       >
-                        <Play className="w-3 h-3 fill-amber-400" />
+                        <Play className="w-3 h-3 fill-wm-accent" />
                         <span>Details</span>
                       </button>
 
                       <div className="flex items-center space-x-2">
+                        {onToggleWatched && (
+                          <button
+                            onClick={() => onToggleWatched(movie.id)}
+                            className={`p-2 rounded-lg border transition ${
+                              isWatched
+                                ? 'bg-emerald-600/20 text-emerald-300 border-emerald-600'
+                                : 'bg-black/50 border-gray-800 hover:border-gray-700 text-gray-400 hover:text-white'
+                            }`}
+                            title={isWatched ? 'Mark as unwatched' : 'Mark as watched'}
+                          >
+                            <CheckCircle2 className={`w-4 h-4 ${isWatched ? 'text-emerald-400 fill-emerald-400/20' : ''}`} />
+                          </button>
+                        )}
+
                         <button
                           onClick={() => onAddToWatchlist(movie)}
-                          className={`p-2 rounded-xl border transition ${
+                          className={`p-2 rounded-lg border transition ${
                             isInWatchlist
-                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                              : 'bg-slate-900 border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white'
+                              ? 'bg-emerald-950/80 text-emerald-300 border-emerald-700'
+                              : 'bg-black/50 border-gray-800 hover:border-gray-700 text-gray-400 hover:text-white'
                           }`}
                           title="Watchlist"
                         >
@@ -327,7 +374,7 @@ export default function ResultsView({
 
                         <button
                           onClick={() => onNotInterested(movie.id)}
-                          className="p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-rose-500/20 text-slate-500 hover:text-rose-400 rounded-xl transition"
+                          className="p-2 bg-black/50 hover:bg-wm-card-hover border border-gray-800 hover:border-red-900/40 text-gray-400 hover:text-wm-accent rounded-lg transition"
                           title="Not Interested"
                         >
                           <EyeOff className="w-4 h-4" />
@@ -344,11 +391,11 @@ export default function ResultsView({
 
       {/* 3. CONVERSATIONAL REFINEMENT PANEL */}
       {recommendations.refinement_suggestions && recommendations.refinement_suggestions.length > 0 && (
-        <div className="space-y-4 pt-6 border-t border-slate-800">
+        <div className="space-y-4 pt-6 border-t border-gray-800">
           <div className="flex items-center space-x-2">
-            <HelpCircle className="w-4 h-4 text-amber-400" />
-            <h3 className="text-xs font-bold font-mono tracking-wider text-slate-400 uppercase">
-              Refine your watchlist results
+            <HelpCircle className="w-4 h-4 text-wm-accent" />
+            <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase">
+              Refine your shortlist
             </h3>
           </div>
           
@@ -358,9 +405,9 @@ export default function ResultsView({
                 id={`refinement-btn-${idx}`}
                 key={idx}
                 onClick={() => onRefine(s)}
-                className="bg-slate-900/60 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 px-4 py-2.5 rounded-xl text-xs md:text-sm font-medium transition cursor-pointer text-left leading-relaxed flex items-center space-x-2"
+                className="bg-wm-card hover:bg-wm-card-hover text-gray-300 hover:text-white border border-gray-800 px-4 py-2.5 rounded-lg text-xs md:text-sm font-medium transition cursor-pointer text-left leading-relaxed flex items-center space-x-2"
               >
-                <span className="w-1.5 h-1.5 bg-amber-500 rounded-full flex-shrink-0"></span>
+                <span className="w-1.5 h-1.5 bg-wm-accent rounded-full flex-shrink-0"></span>
                 <span>{s}</span>
               </button>
             ))}

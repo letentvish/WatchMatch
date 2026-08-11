@@ -155,17 +155,17 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-4xl mx-auto px-4 py-10 space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-6">
-        <div className="flex items-center space-x-2">
-          <Sliders className="w-5 h-5 text-amber-400" />
-          <h2 className="text-2xl font-sans font-bold text-white tracking-tight">Advanced Filter Console</h2>
+      <div className="flex items-center justify-between border-b border-gray-800 pb-6">
+        <div className="flex items-center space-x-3">
+          <Sliders className="w-6 h-6 text-wm-accent" />
+          <h2 className="text-2xl font-extrabold text-white tracking-tight">Advanced Filter Console</h2>
         </div>
         <button
           id="btn-reset-filters"
           onClick={handleReset}
-          className="flex items-center space-x-1 text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg font-mono transition"
+          className="flex items-center space-x-1.5 text-xs text-gray-400 hover:text-white bg-wm-card hover:bg-wm-card-hover px-3.5 py-2 rounded-lg font-mono transition border border-gray-800"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           <span>Reset All</span>
@@ -175,7 +175,7 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
       <form onSubmit={handleSubmit} className="space-y-8" id="filter-builder-form">
         {/* 1. Format / Content Type */}
         <div className="space-y-3">
-          <h3 className="text-sm font-bold font-mono tracking-wider text-slate-400 uppercase">Format Preference</h3>
+          <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase">Format Preference</h3>
           <div className="flex flex-wrap gap-2">
             {contentTypes.map((type) => {
               const active = filters.content_type.includes(type.value);
@@ -185,13 +185,13 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
                   type="button"
                   key={type.value}
                   onClick={() => handleToggleContentType(type.value)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all duration-200 flex items-center space-x-1.5 ${
+                  className={`px-4 py-2.5 rounded-lg text-sm font-semibold border transition-all duration-200 flex items-center space-x-1.5 ${
                     active 
-                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-md shadow-amber-500/5' 
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                      ? 'bg-wm-accent text-white border-wm-accent shadow-md' 
+                      : 'bg-wm-card border-gray-800 text-gray-300 hover:text-white hover:bg-wm-card-hover'
                   }`}
                 >
-                  {active && <Check className="w-3.5 h-3.5" />}
+                  {active && <Check className="w-4 h-4" />}
                   <span>{type.label}</span>
                 </button>
               );
@@ -201,7 +201,7 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
 
         {/* 2. Mood Scale and Tone */}
         <div className="space-y-3">
-          <h3 className="text-sm font-bold font-mono tracking-wider text-slate-400 uppercase">Mood & Tone Vibe</h3>
+          <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase">Mood & Tone Vibe</h3>
           <div className="flex flex-wrap gap-2">
             {moodsList.map((mood) => {
               const active = filters.moods.includes(mood);
@@ -211,13 +211,13 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
                   type="button"
                   key={mood}
                   onClick={() => handleToggleMood(mood)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all duration-200 flex items-center space-x-1.5 capitalize ${
+                  className={`px-4 py-2.5 rounded-lg text-sm font-semibold border transition-all duration-200 flex items-center space-x-1.5 capitalize ${
                     active 
-                      ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-md shadow-rose-500/5' 
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                      ? 'bg-wm-accent text-white border-wm-accent shadow-md' 
+                      : 'bg-wm-card border-gray-800 text-gray-300 hover:text-white hover:bg-wm-card-hover'
                   }`}
                 >
-                  {active && <Check className="w-3.5 h-3.5" />}
+                  {active && <Check className="w-4 h-4" />}
                   <span>{mood}</span>
                 </button>
               );
@@ -227,8 +227,8 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
 
         {/* 3. Pace Choice */}
         <div className="space-y-3">
-          <h3 className="text-sm font-bold font-mono tracking-wider text-slate-400 uppercase">Narrative Pacing</h3>
-          <div className="grid grid-cols-4 gap-2">
+          <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase">Narrative Pacing</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {['any', 'slow', 'medium', 'fast'].map((p) => {
               const active = filters.pace === p;
               return (
@@ -237,10 +237,10 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
                   type="button"
                   key={p}
                   onClick={() => setFilters(prev => ({ ...prev, pace: p as any }))}
-                  className={`py-3 rounded-xl text-sm font-medium border transition-all text-center capitalize ${
+                  className={`py-3 rounded-lg text-sm font-semibold border transition-all text-center capitalize ${
                     active 
-                      ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40 shadow-md shadow-indigo-500/5' 
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                      ? 'bg-wm-accent text-white border-wm-accent shadow-md' 
+                      : 'bg-wm-card border-gray-800 text-gray-300 hover:text-white hover:bg-wm-card-hover'
                   }`}
                 >
                   {p === 'any' ? 'Any Pace' : p === 'slow' ? 'Slow Burn' : p === 'medium' ? 'Balanced' : 'Fast-Paced'}
@@ -252,53 +252,62 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
 
         {/* 4. Watch Commitment */}
         <div className="space-y-3">
-          <h3 className="text-sm font-bold font-mono tracking-wider text-slate-400 uppercase">Watch Commitment Size</h3>
+          <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase">Watch Commitment Size</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <button
               id="filter-commitment-short"
               type="button"
               onClick={() => handleCommitment('short')}
-              className={`p-4 rounded-xl border text-left transition-all ${
+              className={`p-4 rounded-lg border text-left transition-all ${
                 filters.runtime_max_minutes === 90 
-                  ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' 
-                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                  ? 'bg-wm-card border-wm-accent text-white shadow-lg' 
+                  : 'bg-wm-card border-gray-800 hover:border-gray-700 hover:bg-wm-card-hover'
               }`}
             >
-              <div className="font-sans font-bold text-sm text-white">Under 90 Minutes</div>
-              <p className="text-slate-400 text-xs mt-1">Perfect for a quick, impactful movie night with no fluff.</p>
+              <div className="font-bold text-sm text-white flex items-center justify-between">
+                <span>Under 90 Minutes</span>
+                {filters.runtime_max_minutes === 90 && <Check className="w-4 h-4 text-wm-accent" />}
+              </div>
+              <p className="text-gray-400 text-xs mt-1">Perfect for a quick, impactful movie night with no fluff.</p>
             </button>
             <button
               id="filter-commitment-medium"
               type="button"
               onClick={() => handleCommitment('medium')}
-              className={`p-4 rounded-xl border text-left transition-all ${
+              className={`p-4 rounded-lg border text-left transition-all ${
                 filters.max_total_watch_hours === 15 && filters.runtime_max_minutes !== 90
-                  ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' 
-                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                  ? 'bg-wm-card border-wm-accent text-white shadow-lg' 
+                  : 'bg-wm-card border-gray-800 hover:border-gray-700 hover:bg-wm-card-hover'
               }`}
             >
-              <div className="font-sans font-bold text-sm text-white">Weekend Binge (&lt; 15 hrs)</div>
-              <p className="text-slate-400 text-xs mt-1">Perfect size for limited series, finished storyboards.</p>
+              <div className="font-bold text-sm text-white flex items-center justify-between">
+                <span>Weekend Binge (&lt; 15 hrs)</span>
+                {filters.max_total_watch_hours === 15 && filters.runtime_max_minutes !== 90 && <Check className="w-4 h-4 text-wm-accent" />}
+              </div>
+              <p className="text-gray-400 text-xs mt-1">Perfect size for limited series, finished storyboards.</p>
             </button>
             <button
               id="filter-commitment-long"
               type="button"
               onClick={() => handleCommitment('long')}
-              className={`p-4 rounded-xl border text-left transition-all ${
+              className={`p-4 rounded-lg border text-left transition-all ${
                 filters.max_total_watch_hours === 50
-                  ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300' 
-                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                  ? 'bg-wm-card border-wm-accent text-white shadow-lg' 
+                  : 'bg-wm-card border-gray-800 hover:border-gray-700 hover:bg-wm-card-hover'
               }`}
             >
-              <div className="font-sans font-bold text-sm text-white">Long Binge (Multi-Season)</div>
-              <p className="text-slate-400 text-xs mt-1">Immersive stories, many seasons to lose yourself in.</p>
+              <div className="font-bold text-sm text-white flex items-center justify-between">
+                <span>Long Binge (Multi-Season)</span>
+                {filters.max_total_watch_hours === 50 && <Check className="w-4 h-4 text-wm-accent" />}
+              </div>
+              <p className="text-gray-400 text-xs mt-1">Immersive stories, many seasons to lose yourself in.</p>
             </button>
           </div>
         </div>
 
         {/* 5. Genres */}
         <div className="space-y-3">
-          <h3 className="text-sm font-bold font-mono tracking-wider text-slate-400 uppercase">Genres of Interest</h3>
+          <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase">Genres of Interest</h3>
           <div className="flex flex-wrap gap-2">
             {genresList.map((g) => {
               const active = filters.genres.includes(g);
@@ -308,10 +317,10 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
                   type="button"
                   key={g}
                   onClick={() => handleToggleGenre(g)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
+                  className={`px-3.5 py-2 rounded-lg text-xs font-semibold border transition ${
                     active 
-                      ? 'bg-sky-500/20 text-sky-300 border-sky-500/40' 
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                      ? 'bg-wm-accent text-white border-wm-accent' 
+                      : 'bg-wm-card border-gray-800 text-gray-300 hover:text-white hover:bg-wm-card-hover'
                   }`}
                 >
                   {g}
@@ -323,7 +332,7 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
 
         {/* 6. Content Controls (Avoid) */}
         <div className="space-y-3">
-          <h3 className="text-sm font-bold font-mono tracking-wider text-slate-400 uppercase">Content Exclusions (Avoid)</h3>
+          <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase">Content Exclusions (Avoid)</h3>
           <div className="flex flex-wrap gap-2">
             {['Romance', 'Excessive Gore', 'Extreme Violence', 'Jump Scares', 'Sad Ending', 'Cliffhangers'].map((exc) => {
               const active = filters.content_exclusions.includes(exc.toLowerCase());
@@ -333,10 +342,10 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
                   type="button"
                   key={exc}
                   onClick={() => handleToggleExclusion(exc.toLowerCase())}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold border transition ${
+                  className={`px-3.5 py-2 rounded-lg text-xs font-mono font-bold border transition ${
                     active 
-                      ? 'bg-rose-500/25 text-rose-400 border-rose-500/50' 
-                      : 'bg-slate-900/60 border-slate-800 text-slate-500 hover:text-rose-400 hover:border-rose-500/30'
+                      ? 'bg-red-950 text-red-300 border-red-700' 
+                      : 'bg-wm-card border-gray-800 text-gray-400 hover:text-red-400 hover:border-red-900'
                   }`}
                 >
                   <span>Avoid {exc}</span>
@@ -348,7 +357,7 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
 
         {/* 7. Streaming Platforms */}
         <div className="space-y-3">
-          <h3 className="text-sm font-bold font-mono tracking-wider text-slate-400 uppercase">Available Platforms</h3>
+          <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase">Available Platforms</h3>
           <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
             {platformsList.map((plat) => {
               const active = filters.platform_preferences.includes(plat);
@@ -358,10 +367,10 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
                   type="button"
                   key={plat}
                   onClick={() => handleTogglePlatform(plat)}
-                  className={`py-2 rounded-xl text-xs font-bold border transition text-center ${
+                  className={`py-2.5 rounded-lg text-xs font-bold border transition text-center ${
                     active 
-                      ? 'bg-amber-500 text-slate-950 border-amber-500 font-extrabold' 
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                      ? 'bg-white text-wm-bg border-white font-black' 
+                      : 'bg-wm-card border-gray-800 text-gray-400 hover:text-white hover:bg-wm-card-hover'
                   }`}
                 >
                   {plat}
@@ -373,7 +382,7 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
 
         {/* 8. Languages */}
         <div className="space-y-3">
-          <h3 className="text-sm font-bold font-mono tracking-wider text-slate-400 uppercase">Languages</h3>
+          <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase">Languages</h3>
           <div className="flex flex-wrap gap-2">
             {languagesList.map((lang) => {
               const active = filters.language_preferences.includes(lang);
@@ -383,10 +392,10 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
                   type="button"
                   key={lang}
                   onClick={() => handleToggleLanguage(lang)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition ${
+                  className={`px-3.5 py-2 rounded-lg text-xs font-semibold border transition ${
                     active 
-                      ? 'bg-violet-500/20 text-violet-300 border-violet-500/40' 
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                      ? 'bg-wm-accent text-white border-wm-accent' 
+                      : 'bg-wm-card border-gray-800 text-gray-300 hover:text-white hover:bg-wm-card-hover'
                   }`}
                 >
                   {lang}
@@ -397,18 +406,18 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
         </div>
 
         {/* Submit */}
-        <div className="pt-6 border-t border-slate-800 flex justify-end">
+        <div className="pt-6 border-t border-gray-800 flex justify-end">
           <button
             id="filter-scout-submit"
             type="submit"
             disabled={isLoading}
-            className="w-full md:w-auto px-8 py-4 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-slate-950 hover:text-black font-bold rounded-xl transition shadow-xl shadow-rose-500/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+            className="w-full md:w-auto px-8 py-4 bg-wm-accent hover:bg-red-700 text-white font-bold rounded-lg transition shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-base"
           >
             {isLoading ? (
-              <div className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             ) : (
               <>
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="w-5 h-5" />
                 <span>Search with Structured Filters</span>
               </>
             )}

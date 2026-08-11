@@ -1,5 +1,5 @@
-import React from 'react';
-import { Film, User, Sliders, Heart } from 'lucide-react';
+import React, { useState } from 'react';
+import { Film, Sliders, Heart, User, Menu, X } from 'lucide-react';
 
 interface NavbarProps {
   currentView: 'discover' | 'filters' | 'profile' | 'watchlist';
@@ -8,65 +8,72 @@ interface NavbarProps {
 }
 
 export default function Navbar({ currentView, onViewChange, watchlistCount }: NavbarProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleNavClick = (view: 'discover' | 'filters' | 'profile' | 'watchlist') => {
+    onViewChange(view);
+    setMobileMenuOpen(false);
+  };
+
   return (
-    <nav className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-6 py-4">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        {/* Brand */}
+    <header className="bg-wm-bg/90 backdrop-blur-md sticky top-0 z-50 border-b border-gray-800/80">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        {/* Logo */}
         <div 
-          className="flex items-center space-x-2 cursor-pointer"
-          onClick={() => onViewChange('discover')}
+          className="flex items-center gap-3 cursor-pointer group"
+          onClick={() => handleNavClick('discover')}
           id="navbar-logo"
         >
-          <div className="bg-gradient-to-tr from-amber-500 to-rose-500 p-2 rounded-xl text-white shadow-lg shadow-rose-500/20">
-            <Film className="w-5 h-5" />
+          <div className="w-10 h-10 flex items-center justify-center text-wm-accent transition-transform group-hover:scale-105">
+            <Film className="w-7 h-7 stroke-[2.25]" />
           </div>
-          <div>
-            <span className="font-sans font-bold tracking-tight text-xl text-white">WatchMatch</span>
-            <span className="text-xs text-rose-400 block -mt-1 font-medium font-mono">Personal Movie Scout</span>
+          <div className="flex flex-col leading-none">
+            <span className="text-2xl font-black tracking-tight text-white group-hover:text-gray-100 transition-colors">WatchMatch</span>
+            <span className="text-[10px] text-wm-accent uppercase font-bold tracking-widest mt-0.5">Personal Movie Scout</span>
           </div>
         </div>
 
-        {/* Links */}
-        <div className="flex items-center space-x-2 md:space-x-4">
+        {/* Desktop Nav Links */}
+        <nav className="hidden md:flex items-center gap-8 text-sm font-semibold">
           <button
             id="nav-btn-discover"
-            onClick={() => onViewChange('discover')}
-            className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-              currentView === 'discover' 
-                ? 'bg-slate-800 text-white shadow-inner border border-slate-700' 
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+            onClick={() => handleNavClick('discover')}
+            className={`flex items-center gap-2 transition-colors py-1 ${
+              currentView === 'discover'
+                ? 'text-white font-bold border-b-2 border-wm-accent'
+                : 'text-gray-300 hover:text-wm-accent'
             }`}
           >
-            <Film className="w-4 h-4 text-rose-400" />
+            <Film className="w-4 h-4 text-wm-accent" />
             <span>Scout</span>
           </button>
 
           <button
             id="nav-btn-filters"
-            onClick={() => onViewChange('filters')}
-            className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-              currentView === 'filters' 
-                ? 'bg-slate-800 text-white shadow-inner border border-slate-700' 
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+            onClick={() => handleNavClick('filters')}
+            className={`flex items-center gap-2 transition-colors py-1 ${
+              currentView === 'filters'
+                ? 'text-white font-bold border-b-2 border-wm-accent'
+                : 'text-gray-300 hover:text-white'
             }`}
           >
-            <Sliders className="w-4 h-4 text-amber-400" />
+            <Sliders className="w-4 h-4 text-gray-400" />
             <span>Filters</span>
           </button>
 
           <button
             id="nav-btn-watchlist"
-            onClick={() => onViewChange('watchlist')}
-            className={`relative flex items-center space-x-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-              currentView === 'watchlist' 
-                ? 'bg-slate-800 text-white shadow-inner border border-slate-700' 
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+            onClick={() => handleNavClick('watchlist')}
+            className={`flex items-center gap-2 transition-colors relative py-1 ${
+              currentView === 'watchlist'
+                ? 'text-white font-bold border-b-2 border-wm-accent'
+                : 'text-gray-300 hover:text-white'
             }`}
           >
-            <Heart className="w-4 h-4 text-emerald-400" />
+            <Heart className="w-4 h-4 text-gray-400" />
             <span>Watchlist</span>
             {watchlistCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-slate-900 animate-pulse">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-wm-accent text-[9px] font-bold text-white">
                 {watchlistCount}
               </span>
             )}
@@ -74,18 +81,86 @@ export default function Navbar({ currentView, onViewChange, watchlistCount }: Na
 
           <button
             id="nav-btn-profile"
-            onClick={() => onViewChange('profile')}
-            className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-              currentView === 'profile' 
-                ? 'bg-slate-800 text-white shadow-inner border border-slate-700' 
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+            onClick={() => handleNavClick('profile')}
+            className={`flex items-center gap-2 transition-colors py-1 ${
+              currentView === 'profile'
+                ? 'text-white font-bold border-b-2 border-wm-accent'
+                : 'text-gray-300 hover:text-white'
             }`}
           >
-            <User className="w-4 h-4 text-sky-400" />
+            <User className="w-4 h-4 text-gray-400" />
             <span>My Taste</span>
           </button>
-        </div>
+        </nav>
+
+        {/* Mobile Menu Button */}
+        <button 
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden text-gray-300 hover:text-white p-2"
+          aria-label="Toggle menu"
+        >
+          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
       </div>
-    </nav>
+
+      {/* Mobile Nav Dropdown */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-wm-card border-b border-gray-800 px-4 py-4 space-y-3">
+          <button
+            onClick={() => handleNavClick('discover')}
+            className={`flex items-center justify-between w-full px-4 py-3 rounded-lg text-sm font-semibold ${
+              currentView === 'discover' ? 'bg-wm-accent text-white' : 'text-gray-300 hover:bg-wm-card-hover'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Film className="w-4 h-4" />
+              <span>Scout</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => handleNavClick('filters')}
+            className={`flex items-center justify-between w-full px-4 py-3 rounded-lg text-sm font-semibold ${
+              currentView === 'filters' ? 'bg-wm-accent text-white' : 'text-gray-300 hover:bg-wm-card-hover'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Sliders className="w-4 h-4" />
+              <span>Filters</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => handleNavClick('watchlist')}
+            className={`flex items-center justify-between w-full px-4 py-3 rounded-lg text-sm font-semibold ${
+              currentView === 'watchlist' ? 'bg-wm-accent text-white' : 'text-gray-300 hover:bg-wm-card-hover'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Heart className="w-4 h-4" />
+              <span>Watchlist</span>
+            </div>
+            {watchlistCount > 0 && (
+              <span className="bg-white text-wm-accent text-xs font-bold rounded-full px-2 py-0.5">
+                {watchlistCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => handleNavClick('profile')}
+            className={`flex items-center justify-between w-full px-4 py-3 rounded-lg text-sm font-semibold ${
+              currentView === 'profile' ? 'bg-wm-accent text-white' : 'text-gray-300 hover:bg-wm-card-hover'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <User className="w-4 h-4" />
+              <span>My Taste</span>
+            </div>
+          </button>
+        </div>
+      )}
+    </header>
   );
 }
+

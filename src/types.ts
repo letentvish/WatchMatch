@@ -83,6 +83,7 @@ export interface RecommendationResponse {
 
 export interface TasteProfile {
   watchlist: string[]; // movie IDs
+  watched: string[]; // movie IDs for already watched titles
   liked: string[]; // movie IDs
   disliked: string[]; // movie IDs
   notInterested: string[]; // movie IDs
