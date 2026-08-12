@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { User, Heart, Trash2, Sliders, Flame, Trash, Bookmark, RefreshCw, Star, Info, CheckCircle2, Filter } from 'lucide-react';
-import { TasteProfile, Movie } from '../types';
+import { User, Heart, Trash2, Sliders, Flame, Trash, Bookmark, RefreshCw, Star, Info, CheckCircle2, Filter, Sparkles, Brain, Compass, Award, Zap, Film } from 'lucide-react';
+import { TasteProfile, Movie, CinephilePersona } from '../types';
 import { curatedMovies } from '../data/curatedMovies';
 import { getCleanImageUrl, handleImageLoadError } from '../utils/imageHelper';
 
@@ -13,6 +13,8 @@ interface ProfileViewProps {
   onToggleWatched?: (movieId: string) => void;
   onResetTasteProfile: () => void;
   onMovieClick: (movie: Movie) => void;
+  onGeneratePersona?: () => Promise<void> | void;
+  onSaveMovie?: (movie: Movie) => void;
 }
 
 export default function ProfileView({
@@ -24,16 +26,37 @@ export default function ProfileView({
   onToggleWatched,
   onResetTasteProfile,
   onMovieClick,
+  onGeneratePersona,
+  onSaveMovie,
 }: ProfileViewProps) {
   const [statusFilter, setStatusFilter] = useState<'all' | 'unwatched' | 'watched'>('all');
+  const [isGeneratingPersona, setIsGeneratingPersona] = useState(false);
+
+  // Helper to resolve movie by ID from saved dictionary or curated list
+  const getMovieById = (id: string): Movie | undefined => {
+    return tasteProfile.savedMoviesDict?.[id] || curatedMovies.find(m => m.id === id);
+  };
 
   // Load complete movie details for watchlist, watched, liked, disliked
   const watchedIds = tasteProfile.watched || [];
-  const watchlistMovies = (tasteProfile.watchlist || []).map(id => curatedMovies.find(m => m.id === id)).filter(Boolean) as Movie[];
-  const watchedMovies = watchedIds.map(id => curatedMovies.find(m => m.id === id)).filter(Boolean) as Movie[];
+  const watchlistMovies = (tasteProfile.watchlist || []).map(id => getMovieById(id)).filter(Boolean) as Movie[];
+  const watchedMovies = watchedIds.map(id => getMovieById(id)).filter(Boolean) as Movie[];
   const unwatchedWatchlistMovies = watchlistMovies.filter(m => !watchedIds.includes(m.id));
-  const likedMovies = (tasteProfile.liked || []).map(id => curatedMovies.find(m => m.id === id)).filter(Boolean) as Movie[];
-  const dislikedMovies = (tasteProfile.disliked || []).map(id => curatedMovies.find(m => m.id === id)).filter(Boolean) as Movie[];
+  const likedMovies = (tasteProfile.liked || []).map(id => getMovieById(id)).filter(Boolean) as Movie[];
+  const dislikedMovies = (tasteProfile.disliked || []).map(id => getMovieById(id)).filter(Boolean) as Movie[];
+
+  const handlePersonaClick = async () => {
+    if (!onGeneratePersona) return;
+    setIsGeneratingPersona(true);
+    try {
+      await onGeneratePersona();
+    } finally {
+      setIsGeneratingPersona(false);
+    }
+  };
+
+  const persona: CinephilePersona | undefined = tasteProfile.persona;
+
 
   // Compute favorite genres from liked movies
   const genresCount: Record<string, number> = {};
@@ -62,85 +85,229 @@ export default function ProfileView({
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-10" id="taste-profile-view">
       {/* 1. Header Profile Summary */}
-      <div className="bg-wm-card border border-gray-800 p-6 md:p-8 rounded-xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
-        <div className="flex items-center space-x-4">
-          <div className="w-14 h-14 bg-wm-accent rounded-full text-white flex items-center justify-center flex-shrink-0 shadow-lg">
-            <User className="w-7 h-7 fill-white" />
+      <div className="glass-panel border border-white/15 p-6 md:p-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden">
+        <div className="flex items-center space-x-5">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-600 to-rose-600 text-white flex items-center justify-center flex-shrink-0 shadow-[0_0_30px_-5px_rgba(229,9,20,0.6)] border border-white/20">
+            <User className="w-8 h-8 fill-white" />
           </div>
           <div className="text-center md:text-left space-y-1">
-            <h2 className="text-xl font-black text-white">Your Personal CineTaste Profile</h2>
-            <p className="text-gray-400 text-sm leading-relaxed">WatchMatch builds a persistent layer from your likes, dislikes, and watchlist to customize Scout answers.</p>
+            <div className="flex items-center justify-center md:justify-start space-x-2">
+              <h2 className="text-2xl font-black text-white font-heading">Your CineTaste Passport</h2>
+              <span className="bg-red-500/20 text-red-400 border border-red-500/40 text-[10px] font-mono px-2.5 py-0.5 rounded-full font-bold uppercase">
+                Active Profile
+              </span>
+            </div>
+            <p className="text-gray-300 text-xs sm:text-sm font-sans leading-relaxed">
+              WatchMatch continuously learns from your likes, dislikes, and viewing history to craft hyper-personalized recommendations.
+            </p>
           </div>
         </div>
-        
+
         <button
           id="btn-clear-profile"
           onClick={onResetTasteProfile}
-          className="flex items-center space-x-1.5 text-xs text-wm-accent hover:text-white bg-black/60 border border-gray-800 hover:bg-wm-card-hover px-4 py-2.5 rounded-lg font-bold transition duration-200 shrink-0"
+          className="flex items-center space-x-2 text-xs text-gray-300 hover:text-red-400 glass-card border border-white/15 hover:border-red-500/40 px-4 py-3 rounded-xl font-bold transition duration-200 shrink-0 cursor-pointer"
         >
           <RefreshCw className="w-3.5 h-3.5" />
-          <span>Clear Profile History</span>
+          <span>Clear Taste History</span>
         </button>
       </div>
 
-      {/* 2. Analytical Preferences Insights */}
+      {/* 2. AI CINEPHILE PERSONA IDENTITY CARD */}
+      <div className="glass-panel border border-white/15 rounded-3xl p-6 md:p-8 space-y-6 shadow-[0_0_80px_-15px_rgba(229,9,20,0.3)] relative overflow-hidden backdrop-blur-2xl">
+        <div className="absolute -top-24 -right-24 w-72 h-72 bg-red-600/15 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+          <div className="flex items-center space-x-3.5">
+            <div className="p-3.5 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-500 shadow-md">
+              <Brain className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="text-[10px] bg-gradient-to-r from-red-600 to-rose-600 text-white font-mono font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow">
+                  AI Cinephile Persona
+                </span>
+                {persona && (
+                  <span className="text-[10px] text-gray-400 font-mono">
+                    Updated {new Date(persona.generatedAt).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+              <h3 className="text-2xl font-black text-white tracking-tight mt-1 font-heading">
+                {persona ? persona.archetype : 'Your Cinephile Identity'}
+              </h3>
+            </div>
+          </div>
+
+          <button
+            onClick={handlePersonaClick}
+            disabled={isGeneratingPersona}
+            className="flex items-center space-x-2 bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 hover:scale-[1.02] text-white font-extrabold text-xs px-6 py-3 rounded-2xl shadow-[0_0_25px_-5px_rgba(229,9,20,0.5)] transition duration-200 disabled:opacity-50 shrink-0 cursor-pointer"
+          >
+            <Sparkles className={`w-4 h-4 ${isGeneratingPersona ? 'animate-spin' : ''}`} />
+            <span>{isGeneratingPersona ? 'Synthesizing Taste Persona...' : persona ? 'Refresh AI Persona' : 'Generate AI Persona'}</span>
+          </button>
+        </div>
+
+        {persona ? (
+          <div className="space-y-6">
+            {/* Tagline */}
+            <p className="text-amber-300 font-medium text-sm sm:text-base italic border-l-2 border-amber-500 pl-4 py-0.5 font-sans bg-amber-500/5 rounded-r-xl">
+              "{persona.tagline}"
+            </p>
+
+            {/* Taste DNA Metrics Bars */}
+            <div className="space-y-4 bg-black/40 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+              <h4 className="text-xs font-bold text-gray-300 uppercase font-mono tracking-wider flex items-center space-x-2">
+                <Zap className="w-4 h-4 text-red-500" />
+                <span>Cinematic Taste DNA Breakdown</span>
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-1 font-sans">
+                {[
+                  { label: 'Mind-Bending & Complexity', val: persona.tasteDNA?.mindBending || 75, color: 'from-indigo-600 to-purple-600' },
+                  { label: 'Pacing & Intensity', val: persona.tasteDNA?.pacing || 70, color: 'from-amber-500 to-orange-500' },
+                  { label: 'Gritty / Dark Realism', val: persona.tasteDNA?.darkRealism || 65, color: 'from-red-600 to-rose-600' },
+                  { label: 'Emotional & Character Depth', val: persona.tasteDNA?.emotionalDepth || 80, color: 'from-emerald-500 to-teal-500' },
+                  { label: 'Visual Spectacle', val: persona.tasteDNA?.spectacle || 70, color: 'from-cyan-500 to-blue-500' },
+                ].map(item => (
+                  <div key={item.label} className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-semibold">
+                      <span className="text-gray-300">{item.label}</span>
+                      <span className="text-gray-400 font-mono font-bold">{item.val}%</span>
+                    </div>
+                    <div className="w-full bg-white/10 h-2.5 rounded-full overflow-hidden p-0.5 border border-white/10">
+                      <div
+                        className={`bg-gradient-to-r ${item.color} h-full rounded-full transition-all duration-700 shadow`}
+                        style={{ width: `${item.val}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Signature Tropes */}
+            {persona.signatureTropes?.length > 0 && (
+              <div className="space-y-2.5">
+                <span className="text-xs font-bold font-mono text-gray-400 uppercase tracking-wider block">Signature Narrative Tropes</span>
+                <div className="flex flex-wrap gap-2">
+                  {persona.signatureTropes.map(trope => (
+                    <span key={trope} className="bg-white/5 border border-white/10 text-gray-200 text-xs font-medium px-3.5 py-1.5 rounded-xl flex items-center space-x-1.5 backdrop-blur-md">
+                      <Award className="w-3.5 h-3.5 text-amber-400" />
+                      <span>{trope}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* AI Summary */}
+            <div className="glass-card border border-white/10 rounded-2xl p-6 space-y-2 text-sm text-gray-300 leading-relaxed font-sans">
+              <span className="text-xs font-bold font-mono text-red-400 uppercase tracking-wider block">AI Cinephile Personality Analysis</span>
+              <p className="whitespace-pre-line leading-relaxed">{persona.aiSummary}</p>
+            </div>
+
+            {/* Persona Recommended Seeds */}
+            {persona.recommendedSeeds?.length > 0 && (
+              <div className="space-y-3 pt-2">
+                <span className="text-xs font-bold font-mono text-gray-400 uppercase tracking-wider block flex items-center space-x-2">
+                  <Compass className="w-4 h-4 text-red-500" />
+                  <span>Tailored Recommendation Seeds For Your Persona</span>
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {persona.recommendedSeeds.map(seed => (
+                    <span
+                      key={seed}
+                      className="bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/50 text-white font-semibold text-xs px-4 py-2 rounded-xl transition duration-200 cursor-pointer flex items-center space-x-2"
+                    >
+                      <Film className="w-3.5 h-3.5 text-red-400" />
+                      <span>{seed}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-center py-8 bg-black/40 border border-dashed border-white/15 rounded-2xl space-y-4">
+            <Brain className="w-12 h-12 text-gray-500 mx-auto" />
+            <div className="space-y-1">
+              <h4 className="text-white font-extrabold text-base font-heading">Generate your custom Cinephile Persona Card</h4>
+              <p className="text-gray-400 text-xs sm:text-sm max-w-md mx-auto leading-relaxed font-sans">
+                WatchMatch AI will analyze your watch history, liked genres, and viewing habits to synthesize your custom Cinephile Passport.
+              </p>
+            </div>
+            <button
+              onClick={handlePersonaClick}
+              disabled={isGeneratingPersona}
+              className="bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 hover:scale-[1.02] text-white font-extrabold text-xs px-6 py-3 rounded-2xl transition duration-200 cursor-pointer shadow-[0_0_25px_-5px_rgba(229,9,20,0.5)]"
+            >
+              {isGeneratingPersona ? 'Analyzing Your Taste...' : 'Build AI Persona Card'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* 3. Analytical Preferences Insights */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Fav Genres */}
-        <div className="bg-wm-card border border-gray-800 p-6 rounded-xl space-y-3">
+        <div className="glass-card border border-white/10 p-6 rounded-2xl space-y-3">
           <div className="flex items-center space-x-2">
-            <Flame className="w-5 h-5 text-wm-accent" />
-            <h3 className="font-bold text-white text-base">Top Preferred Genres</h3>
+            <Flame className="w-5 h-5 text-red-500" />
+            <h3 className="font-extrabold text-white text-base font-heading">Top Preferred Genres</h3>
           </div>
           {favoriteGenres.length > 0 ? (
             <div className="flex flex-wrap gap-2 pt-1">
               {favoriteGenres.map(g => (
-                <span key={g} className="bg-red-950/60 border border-red-800 text-red-300 font-bold text-xs px-3.5 py-1.5 rounded-md uppercase">
+                <span key={g} className="bg-red-500/15 border border-red-500/30 text-red-300 font-mono font-bold text-xs px-4 py-1.5 rounded-xl uppercase">
                   {g}
                 </span>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 text-sm">Like titles during movie scouting to discover your favorite genres.</p>
+            <p className="text-gray-400 text-xs font-sans">Like titles during movie scouting to discover your favorite genres.</p>
           )}
         </div>
 
         {/* Fav Moods */}
-        <div className="bg-wm-card border border-gray-800 p-6 rounded-xl space-y-3">
+        <div className="glass-card border border-white/10 p-6 rounded-2xl space-y-3">
           <div className="flex items-center space-x-2">
             <Sliders className="w-5 h-5 text-amber-500" />
-            <h3 className="font-bold text-white text-base">Favorite Story Vibes</h3>
+            <h3 className="font-extrabold text-white text-base font-heading">Favorite Story Vibes</h3>
           </div>
           {favoriteMoods.length > 0 ? (
             <div className="flex flex-wrap gap-2 pt-1">
               {favoriteMoods.map(m => (
-                <span key={m} className="bg-amber-950/60 border border-amber-800 text-amber-300 font-bold text-xs px-3.5 py-1.5 rounded-md uppercase">
+                <span key={m} className="bg-amber-500/15 border border-amber-500/30 text-amber-300 font-mono font-bold text-xs px-4 py-1.5 rounded-xl uppercase">
                   {m}
                 </span>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 text-sm">Interact with recommendations to map your atmospheric vibes.</p>
+            <p className="text-gray-400 text-xs font-sans">Interact with recommendations to map your atmospheric vibes.</p>
           )}
         </div>
       </div>
 
-      {/* 3. WATCH STATUS FILTER TOGGLE CONTROL */}
-      <div className="bg-wm-card border border-gray-800 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md">
-        <div className="flex items-center space-x-2.5">
-          <Filter className="w-5 h-5 text-wm-accent" />
+      {/* 4. WATCH STATUS FILTER TOGGLE CONTROL */}
+      <div className="glass-panel border border-white/10 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500">
+            <Filter className="w-5 h-5" />
+          </div>
           <div>
-            <h3 className="font-bold text-white text-sm">Library Watch Filter</h3>
-            <p className="text-xs text-gray-400">Filter your saved films by viewing status</p>
+            <h3 className="font-extrabold text-white text-sm font-heading">Library Watch Filter</h3>
+            <p className="text-xs text-gray-400 font-sans">Filter your saved films by viewing status</p>
           </div>
         </div>
 
-        <div className="flex items-center bg-black/60 p-1 rounded-lg border border-gray-800 gap-1 w-full sm:w-auto justify-center">
+        <div className="flex items-center bg-black/40 p-1.5 rounded-xl border border-white/10 gap-1 w-full sm:w-auto justify-center backdrop-blur-md">
           <button
             id="filter-btn-all"
             onClick={() => setStatusFilter('all')}
-            className={`px-3 py-1.5 rounded-md text-xs font-bold transition ${
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 ${
               statusFilter === 'all'
-                ? 'bg-wm-accent text-white shadow'
+                ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-md'
                 : 'text-gray-400 hover:text-white'
             }`}
           >
@@ -149,21 +316,21 @@ export default function ProfileView({
           <button
             id="filter-btn-unwatched"
             onClick={() => setStatusFilter('unwatched')}
-            className={`px-3 py-1.5 rounded-md text-xs font-bold transition flex items-center space-x-1.5 ${
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 flex items-center space-x-1.5 ${
               statusFilter === 'unwatched'
-                ? 'bg-wm-accent text-white shadow'
+                ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-md'
                 : 'text-gray-400 hover:text-white'
             }`}
           >
             <Bookmark className="w-3.5 h-3.5" />
-            <span>Unwatched Watchlist ({unwatchedWatchlistMovies.length})</span>
+            <span>Unwatched ({unwatchedWatchlistMovies.length})</span>
           </button>
           <button
             id="filter-btn-watched"
             onClick={() => setStatusFilter('watched')}
-            className={`px-3 py-1.5 rounded-md text-xs font-bold transition flex items-center space-x-1.5 ${
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 flex items-center space-x-1.5 ${
               statusFilter === 'watched'
-                ? 'bg-emerald-600 text-white shadow'
+                ? 'bg-emerald-600 text-white shadow-md'
                 : 'text-gray-400 hover:text-white'
             }`}
           >
@@ -173,13 +340,13 @@ export default function ProfileView({
         </div>
       </div>
 
-      {/* 4. WATCHED HISTORY SECTOR (Shown when filter is 'all' or 'watched') */}
+      {/* 5. WATCHED HISTORY SECTOR */}
       {(statusFilter === 'all' || statusFilter === 'watched') && (
         <div className="space-y-4" id="watched-history-sector">
-          <div className="flex items-center space-x-2 border-b border-gray-800 pb-2">
+          <div className="flex items-center space-x-2 border-b border-white/10 pb-3">
             <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-            <h3 className="font-bold text-lg text-white">Already Watched History</h3>
-            <span className="text-xs bg-emerald-950/60 border border-emerald-800 text-emerald-300 font-mono px-2.5 py-0.5 rounded font-bold">
+            <h3 className="font-extrabold text-lg text-white font-heading">Already Watched History</h3>
+            <span className="text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-mono px-3 py-0.5 rounded-full font-bold">
               {watchedMovies.length} Marked
             </span>
           </div>
@@ -189,26 +356,26 @@ export default function ProfileView({
               {watchedMovies.map(movie => (
                 <div 
                   key={movie.id} 
-                  className="bg-wm-card hover:bg-wm-card-hover border border-emerald-900/40 rounded-lg p-4 flex items-center justify-between gap-4 transition group"
+                  className="glass-card border border-white/10 hover:border-emerald-500/40 rounded-2xl p-4 flex items-center justify-between gap-4 transition duration-200 group shadow-lg"
                 >
                   <div 
                     onClick={() => onMovieClick(movie)}
-                    className="flex items-center space-x-3 cursor-pointer flex-1 min-w-0"
+                    className="flex items-center space-x-3.5 cursor-pointer flex-1 min-w-0"
                   >
                     <img 
                       src={getCleanImageUrl(movie.posterUrl, 'poster')} 
                       alt={movie.title}
                       referrerPolicy="no-referrer"
-                      className="w-12 h-16 object-cover rounded-md flex-shrink-0 border border-gray-800"
+                      className="w-12 h-16 object-cover rounded-xl flex-shrink-0 border border-white/15 group-hover:scale-105 transition"
                       onError={(e) => handleImageLoadError(e, movie.backdropUrl)}
                     />
                     <div className="min-w-0">
-                      <span className="font-bold text-white text-sm block group-hover:text-emerald-400 truncate transition flex items-center space-x-1">
+                      <span className="font-extrabold text-white text-sm block group-hover:text-emerald-400 truncate transition font-heading flex items-center space-x-1">
                         <span>{movie.title}</span>
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 inline flex-shrink-0" />
                       </span>
-                      <span className="text-gray-400 text-xs font-mono">
-                        {movie.year} · ★{movie.rating} · <span className="capitalize">{movie.contentType}</span>
+                      <span className="text-gray-400 text-xs font-mono block mt-0.5">
+                        {movie.year} · ★{movie.rating} · <span className="capitalize text-gray-300">{movie.contentType}</span>
                       </span>
                     </div>
                   </div>
@@ -217,7 +384,7 @@ export default function ProfileView({
                     {onToggleWatched && (
                       <button
                         onClick={() => onToggleWatched(movie.id)}
-                        className="text-emerald-400 hover:text-red-400 p-2 hover:bg-black/40 rounded-lg transition text-xs font-bold"
+                        className="text-emerald-400 hover:text-red-400 p-2 hover:bg-white/10 rounded-xl transition text-xs font-bold font-mono"
                         title="Unmark as watched"
                       >
                         Unmark
@@ -226,7 +393,7 @@ export default function ProfileView({
                     {onRemoveFromWatched && (
                       <button
                         onClick={() => onRemoveFromWatched(movie.id)}
-                        className="text-gray-500 hover:text-wm-accent p-2 hover:bg-black/40 rounded-lg transition"
+                        className="text-gray-400 hover:text-red-400 p-2 hover:bg-white/10 rounded-xl transition"
                         title="Remove from history"
                       >
                         <Trash className="w-4 h-4" />
@@ -237,23 +404,23 @@ export default function ProfileView({
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 bg-wm-card/20 border border-dashed border-gray-800 rounded-xl">
-              <CheckCircle2 className="w-8 h-8 text-gray-700 mx-auto mb-2" />
-              <p className="text-gray-400 text-sm">No titles marked watched yet. Mark movies watched from search results or details modal!</p>
+            <div className="text-center py-8 bg-black/40 border border-dashed border-white/10 rounded-2xl space-y-2">
+              <CheckCircle2 className="w-8 h-8 text-gray-600 mx-auto" />
+              <p className="text-gray-400 text-xs font-sans">No titles marked watched yet. Mark movies watched from search results or details modal!</p>
             </div>
           )}
         </div>
       )}
 
-      {/* 5. WATCHLIST SECTOR (Shown when filter is 'all' or 'unwatched') */}
+      {/* 6. WATCHLIST SECTOR */}
       {(statusFilter === 'all' || statusFilter === 'unwatched') && (
         <div className="space-y-4" id="watchlist-sector">
-          <div className="flex items-center space-x-2 border-b border-gray-800 pb-2">
-            <Bookmark className="w-5 h-5 text-wm-accent" />
-            <h3 className="font-bold text-lg text-white">
+          <div className="flex items-center space-x-2 border-b border-white/10 pb-3">
+            <Bookmark className="w-5 h-5 text-red-500" />
+            <h3 className="font-extrabold text-lg text-white font-heading">
               {statusFilter === 'unwatched' ? 'Unwatched Watchlist' : 'Your Curated Watchlist'}
             </h3>
-            <span className="text-xs bg-wm-card border border-gray-800 text-gray-300 font-mono px-2.5 py-0.5 rounded">
+            <span className="text-xs bg-white/5 border border-white/10 text-gray-300 font-mono px-3 py-0.5 rounded-full font-bold">
               {statusFilter === 'unwatched' ? unwatchedWatchlistMovies.length : watchlistMovies.length} Titles
             </span>
           </div>
@@ -266,38 +433,38 @@ export default function ProfileView({
                 return (
                   <div 
                     key={movie.id} 
-                    className="bg-wm-card hover:bg-wm-card-hover border border-gray-800 rounded-lg p-4 flex items-center justify-between gap-4 transition group"
+                    className="glass-card border border-white/10 hover:border-red-500/40 rounded-2xl p-4 flex items-center justify-between gap-4 transition duration-200 group shadow-lg"
                   >
                     <div 
                       onClick={() => onMovieClick(movie)}
-                      className="flex items-center space-x-3 cursor-pointer flex-1 min-w-0"
+                      className="flex items-center space-x-3.5 cursor-pointer flex-1 min-w-0"
                     >
                       <img 
                         src={getCleanImageUrl(movie.posterUrl, 'poster')} 
                         alt={movie.title}
                         referrerPolicy="no-referrer"
-                        className="w-12 h-16 object-cover rounded-md flex-shrink-0 border border-gray-800"
+                        className="w-12 h-16 object-cover rounded-xl flex-shrink-0 border border-white/15 group-hover:scale-105 transition"
                         onError={(e) => handleImageLoadError(e, movie.backdropUrl)}
                       />
                       <div className="min-w-0">
-                        <span className="font-bold text-white text-sm block group-hover:text-wm-accent truncate transition flex items-center space-x-1">
+                        <span className="font-extrabold text-white text-sm block group-hover:text-red-400 truncate transition font-heading flex items-center space-x-1">
                           <span>{movie.title}</span>
                           {isWatched && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 inline flex-shrink-0" />}
                         </span>
-                        <span className="text-gray-400 text-xs font-mono">
-                          {movie.year} · ★{movie.rating} · <span className="capitalize">{movie.contentType}</span>
+                        <span className="text-gray-400 text-xs font-mono block mt-0.5">
+                          {movie.year} · ★{movie.rating} · <span className="capitalize text-gray-300">{movie.contentType}</span>
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-1">
+                    <div className="flex items-center space-x-1.5">
                       {onToggleWatched && (
                         <button
                           onClick={() => onToggleWatched(movie.id)}
-                          className={`text-xs font-bold px-2 py-1 rounded transition border ${
+                          className={`text-xs font-bold px-3 py-1.5 rounded-xl transition duration-200 border ${
                             isWatched
-                              ? 'bg-emerald-950/80 text-emerald-300 border-emerald-700'
-                              : 'bg-black/50 text-gray-400 border-gray-800 hover:text-white'
+                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                              : 'bg-white/5 text-gray-300 border-white/10 hover:text-white hover:border-white/20'
                           }`}
                           title={isWatched ? 'Mark unwatched' : 'Mark watched'}
                         >
@@ -307,7 +474,7 @@ export default function ProfileView({
 
                       <button
                         onClick={() => onRemoveFromWatchlist(movie.id)}
-                        className="text-gray-500 hover:text-wm-accent p-2 hover:bg-black/40 rounded-lg transition"
+                        className="text-gray-400 hover:text-red-400 p-2 hover:bg-white/10 rounded-xl transition"
                         title="Remove from watchlist"
                       >
                         <Trash className="w-4 h-4" />
@@ -318,9 +485,9 @@ export default function ProfileView({
               })}
             </div>
           ) : (
-            <div className="text-center py-10 bg-wm-card/40 border border-dashed border-gray-800 rounded-xl">
-              <Bookmark className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-              <p className="text-gray-400 text-sm">
+            <div className="text-center py-10 bg-black/40 border border-dashed border-white/10 rounded-2xl space-y-2">
+              <Bookmark className="w-8 h-8 text-gray-600 mx-auto" />
+              <p className="text-gray-400 text-xs font-sans">
                 {statusFilter === 'unwatched'
                   ? 'All items on your watchlist have been watched!'
                   : 'Your watchlist is currently empty. Add titles during discovery!'}
@@ -330,12 +497,12 @@ export default function ProfileView({
         </div>
       )}
 
-      {/* 4. LIKED TITLES SECTOR */}
+      {/* 7. LIKED TITLES SECTOR */}
       <div className="space-y-4">
-        <div className="flex items-center space-x-2 border-b border-gray-800 pb-2">
-          <Heart className="w-5 h-5 text-wm-accent" />
-          <h3 className="font-bold text-lg text-white">Liked Recommendations</h3>
-          <span className="text-xs bg-wm-card border border-gray-800 text-gray-300 font-mono px-2.5 py-0.5 rounded">
+        <div className="flex items-center space-x-2 border-b border-white/10 pb-3">
+          <Heart className="w-5 h-5 text-red-500 fill-red-500/20" />
+          <h3 className="font-extrabold text-lg text-white font-heading">Liked Recommendations</h3>
+          <span className="text-xs bg-white/5 border border-white/10 text-gray-300 font-mono px-3 py-0.5 rounded-full font-bold">
             {likedMovies.length} Titles
           </span>
         </div>
@@ -345,24 +512,24 @@ export default function ProfileView({
             {likedMovies.map(movie => (
               <div 
                 key={movie.id} 
-                className="bg-wm-card border border-gray-800 rounded-lg p-4 flex items-center justify-between gap-4"
+                className="glass-card border border-white/10 rounded-2xl p-4 flex items-center justify-between gap-4 shadow-lg hover:border-red-500/30 transition duration-200 group"
               >
                 <div 
                   onClick={() => onMovieClick(movie)}
-                  className="flex items-center space-x-3 cursor-pointer flex-1 min-w-0"
+                  className="flex items-center space-x-3.5 cursor-pointer flex-1 min-w-0"
                 >
                   <img 
                     src={getCleanImageUrl(movie.posterUrl, 'poster')} 
                     alt={movie.title}
                     referrerPolicy="no-referrer"
-                    className="w-12 h-16 object-cover rounded-md flex-shrink-0 border border-gray-800"
+                    className="w-12 h-16 object-cover rounded-xl flex-shrink-0 border border-white/15 group-hover:scale-105 transition"
                     onError={(e) => handleImageLoadError(e, movie.backdropUrl)}
                   />
                   <div className="min-w-0">
-                    <span className="font-bold text-white text-sm block truncate">
+                    <span className="font-extrabold text-white text-sm block truncate font-heading group-hover:text-red-400 transition">
                       {movie.title}
                     </span>
-                    <span className="text-gray-400 text-xs font-mono">
+                    <span className="text-gray-400 text-xs font-mono block mt-0.5">
                       {movie.year} · ★{movie.rating}
                     </span>
                   </div>
@@ -370,7 +537,7 @@ export default function ProfileView({
 
                 <button
                   onClick={() => onRemoveFromLikes(movie.id)}
-                  className="text-gray-500 hover:text-wm-accent p-2 hover:bg-black/40 rounded-lg transition"
+                  className="text-gray-400 hover:text-red-400 p-2 hover:bg-white/10 rounded-xl transition"
                   title="Unlike"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -379,32 +546,32 @@ export default function ProfileView({
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 bg-wm-card/20 border border-dashed border-gray-800 rounded-xl">
-            <p className="text-gray-500 text-sm">No liked films yet.</p>
+          <div className="text-center py-8 bg-black/40 border border-dashed border-white/10 rounded-2xl">
+            <p className="text-gray-400 text-xs font-sans">Like titles during movie scouting to build your preference DNA.</p>
           </div>
         )}
       </div>
 
-      {/* 5. DISLIKED SECTOR */}
+      {/* 8. DISLIKED SECTOR */}
       {dislikedMovies.length > 0 && (
         <div className="space-y-4">
-          <div className="flex items-center space-x-2 border-b border-gray-800 pb-2">
-            <Trash className="w-5 h-5 text-gray-500" />
-            <h3 className="font-bold text-lg text-white">Dismissed / Not Interested</h3>
+          <div className="flex items-center space-x-2 border-b border-white/10 pb-3">
+            <Trash className="w-5 h-5 text-gray-400" />
+            <h3 className="font-extrabold text-lg text-white font-heading">Dismissed / Not Interested</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {dislikedMovies.map(movie => (
               <div 
                 key={movie.id} 
-                className="bg-wm-card/40 border border-gray-800/60 rounded-lg p-4 flex items-center justify-between gap-4"
+                className="glass-card border border-white/10 rounded-2xl p-4 flex items-center justify-between gap-4 shadow"
               >
-                <div className="flex items-center space-x-3 flex-1 min-w-0">
+                <div className="flex items-center space-x-3.5 flex-1 min-w-0">
                   <div className="min-w-0">
-                    <span className="font-semibold text-gray-400 text-sm block truncate">
+                    <span className="font-semibold text-gray-300 text-sm block truncate font-sans">
                       {movie.title}
                     </span>
-                    <span className="text-gray-500 text-xs font-mono">
+                    <span className="text-gray-400 text-xs font-mono block mt-0.5">
                       {movie.year} · Dismissed
                     </span>
                   </div>
@@ -412,7 +579,7 @@ export default function ProfileView({
 
                 <button
                   onClick={() => onRemoveFromDislikes(movie.id)}
-                  className="text-gray-500 hover:text-white p-2 rounded-lg transition"
+                  className="text-gray-400 hover:text-white p-2 hover:bg-white/10 rounded-xl transition"
                   title="Remove from blocklist"
                 >
                   <RefreshCw className="w-4 h-4" />
@@ -425,3 +592,4 @@ export default function ProfileView({
     </div>
   );
 }
+

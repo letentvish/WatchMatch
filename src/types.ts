@@ -81,6 +81,23 @@ export interface RecommendationResponse {
   movieDetails?: Record<string, Movie>;
 }
 
+export interface CinephilePersona {
+  archetype: string;
+  tagline: string;
+  tasteDNA: {
+    mindBending: number; // 0-100
+    pacing: number; // 0-100
+    darkRealism: number; // 0-100
+    emotionalDepth: number; // 0-100
+    spectacle: number; // 0-100
+  };
+  signatureTropes: string[];
+  aiSummary: string;
+  favoriteGenres: string[];
+  recommendedSeeds: string[];
+  generatedAt: string;
+}
+
 export interface TasteProfile {
   watchlist: string[]; // movie IDs
   watched: string[]; // movie IDs for already watched titles
@@ -91,6 +108,8 @@ export interface TasteProfile {
   ratings: Record<string, number>; // movie ID -> rating 1-5
   dislikedTraits: string[];
   preferredTraits: string[];
+  savedMoviesDict?: Record<string, Movie>;
+  persona?: CinephilePersona;
 }
 
 export interface Message {
@@ -102,3 +121,4 @@ export interface Message {
   recommendations?: RecommendationResponse;
   isLoading?: boolean;
 }
+

@@ -27,6 +27,7 @@ export default function App() {
         return {
           ...parsed,
           watched: parsed.watched || [],
+          savedMoviesDict: parsed.savedMoviesDict || {},
         };
       } catch (e) {
         console.error('Failed to parse local taste profile', e);
@@ -42,6 +43,7 @@ export default function App() {
       ratings: {},
       dislikedTraits: [],
       preferredTraits: [],
+      savedMoviesDict: {},
     };
   });
 
@@ -50,10 +52,32 @@ export default function App() {
     localStorage.setItem('watchmatch_taste_profile', JSON.stringify(tasteProfile));
   }, [tasteProfile]);
 
+  // Helper to save movies into local dictionary for persistent profile lookup
+  const saveMoviesToDict = (newMovies: (Movie | undefined)[]) => {
+    setTasteProfile(prev => {
+      const dict = { ...(prev.savedMoviesDict || {}) };
+      let changed = false;
+      newMovies.forEach(m => {
+        if (m && m.id) {
+          dict[m.id] = m;
+          changed = true;
+        }
+      });
+      if (!changed) return prev;
+      return { ...prev, savedMoviesDict: dict };
+    });
+  };
+
+  // Helper to get movie by ID from saved dictionary or curated list
+  const getMovieById = (id: string): Movie | undefined => {
+    return tasteProfile.savedMoviesDict?.[id] || curatedMovies.find(m => m.id === id);
+  };
+
   // Conversational Search submitting handler
   const handleSearchSubmit = async (queryText: string) => {
     setIsLoading(true);
     setErrorMsg(null);
+    setActiveFilters(null); // Reset activeFilters so fresh search doesn't inherit stale country/genre locks
 
     try {
       const response = await fetch('/api/discover', {
@@ -61,9 +85,10 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_message: queryText,
-          existing_preferences: activeFilters || {},
+          existing_preferences: {},
         }),
       });
+
 
       if (!response.ok) {
         throw new Error('Our movie scout server failed to respond. Please try again.');
@@ -78,6 +103,11 @@ export default function App() {
       // Save structured filters
       if (data.filters) {
         setActiveFilters(data.filters);
+      }
+
+      // Save returned movie details into dictionary
+      if (data.recommendations?.movieDetails) {
+        saveMoviesToDict(Object.values(data.recommendations.movieDetails));
       }
 
       // Check if clarifying question was asked
@@ -117,6 +147,11 @@ export default function App() {
       }
 
       const data = await response.json();
+
+      if (data.movieDetails) {
+        saveMoviesToDict(Object.values(data.movieDetails));
+      }
+
       setActiveRecommendations(data);
       setCurrentView('discover'); // Swivel back to results view on Discover tab
     } catch (err: any) {
@@ -127,8 +162,32 @@ export default function App() {
     }
   };
 
+  // AI Persona Generation handler
+  const handleGeneratePersona = async () => {
+    try {
+      const response = await fetch('/api/generate-persona', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taste_profile: tasteProfile }),
+      });
+
+      if (!response.ok) throw new Error('Failed to generate AI Persona.');
+
+      const data = await response.json();
+      if (data.persona) {
+        setTasteProfile(prev => ({
+          ...prev,
+          persona: data.persona,
+        }));
+      }
+    } catch (err) {
+      console.error('Error generating AI persona:', err);
+    }
+  };
+
   // Add/Remove Movie to Watched list
-  const handleToggleWatched = (movieId: string) => {
+  const handleToggleWatched = (movieId: string, movieObj?: Movie) => {
+    if (movieObj) saveMoviesToDict([movieObj]);
     setTasteProfile(prev => {
       const watched = prev.watched || [];
       const exists = watched.includes(movieId);
@@ -141,6 +200,7 @@ export default function App() {
 
   // Add/Remove Movie to Watchlist
   const handleToggleWatchlist = (movie: Movie) => {
+    saveMoviesToDict([movie]);
     setTasteProfile(prev => {
       const exists = prev.watchlist.includes(movie.id);
       const updated = exists
@@ -152,6 +212,7 @@ export default function App() {
 
   // Add Movie to Liked list
   const handleAddToLikes = (movie: Movie) => {
+    saveMoviesToDict([movie]);
     setTasteProfile(prev => {
       const alreadyLiked = prev.liked.includes(movie.id);
       if (alreadyLiked) return prev;
@@ -209,6 +270,7 @@ export default function App() {
         ratings: {},
         dislikedTraits: [],
         preferredTraits: [],
+        savedMoviesDict: {},
       });
       setActiveFilters(null);
       setActiveRecommendations(null);
@@ -242,6 +304,10 @@ export default function App() {
           setErrorMsg(null); // clear prompts questions
         }} 
         watchlistCount={tasteProfile.watchlist.length}
+        onSelectMovie={(movie) => {
+          saveMoviesToDict([movie]);
+          setSelectedMovie(movie);
+        }}
       />
 
       {/* Main Content Stage */}
@@ -331,6 +397,8 @@ export default function App() {
             onToggleWatched={handleToggleWatched}
             onResetTasteProfile={handleResetTasteProfile}
             onMovieClick={(movie) => setSelectedMovie(movie)}
+            onGeneratePersona={handleGeneratePersona}
+            onSaveMovie={(movie) => saveMoviesToDict([movie])}
           />
         )}
 
@@ -349,7 +417,7 @@ export default function App() {
             {tasteProfile.watchlist.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {tasteProfile.watchlist.map(id => {
-                  const movie = curatedMovies.find(m => m.id === id);
+                  const movie = getMovieById(id);
                   if (!movie) return null;
                   const isWatched = (tasteProfile.watched || []).includes(movie.id);
 
@@ -395,7 +463,7 @@ export default function App() {
 
                           <div className="flex items-center space-x-2">
                             <button
-                              onClick={() => handleToggleWatched(movie.id)}
+                              onClick={() => handleToggleWatched(movie.id, movie)}
                               className={`text-xs font-bold px-2.5 py-1 rounded flex items-center space-x-1 border transition ${
                                 isWatched 
                                   ? 'bg-emerald-950/60 text-emerald-300 border-emerald-700' 
@@ -457,3 +525,4 @@ export default function App() {
     </div>
   );
 }
+

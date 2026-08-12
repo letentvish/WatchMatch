@@ -155,17 +155,24 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10 space-y-8">
+    <div className="max-w-4xl mx-auto px-4 py-10 space-y-8" id="filter-builder-view">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-gray-800 pb-6">
-        <div className="flex items-center space-x-3">
-          <Sliders className="w-6 h-6 text-wm-accent" />
-          <h2 className="text-2xl font-extrabold text-white tracking-tight">Advanced Filter Console</h2>
+      <div className="glass-panel border border-white/15 p-6 md:p-8 rounded-3xl flex items-center justify-between shadow-2xl backdrop-blur-2xl">
+        <div className="flex items-center space-x-4">
+          <div className="p-3 bg-gradient-to-br from-red-600 to-rose-600 rounded-2xl text-white shadow-[0_0_20px_-3px_rgba(229,9,20,0.6)]">
+            <Sliders className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-black text-white tracking-tight font-heading">Advanced Filter Console</h2>
+            <p className="text-gray-300 text-xs sm:text-sm font-sans mt-0.5">Customize format, pacing, mood vibes, and exclusions for hyper-focused scouting.</p>
+          </div>
         </div>
+
         <button
           id="btn-reset-filters"
+          type="button"
           onClick={handleReset}
-          className="flex items-center space-x-1.5 text-xs text-gray-400 hover:text-white bg-wm-card hover:bg-wm-card-hover px-3.5 py-2 rounded-lg font-mono transition border border-gray-800"
+          className="flex items-center space-x-2 text-xs text-gray-300 hover:text-red-400 glass-card border border-white/15 hover:border-red-500/40 px-4 py-3 rounded-xl font-bold transition duration-200 shrink-0 cursor-pointer font-mono"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           <span>Reset All</span>
@@ -174,9 +181,12 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
 
       <form onSubmit={handleSubmit} className="space-y-8" id="filter-builder-form">
         {/* 1. Format / Content Type */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase">Format Preference</h3>
-          <div className="flex flex-wrap gap-2">
+        <div className="glass-card border border-white/10 p-6 rounded-3xl space-y-4 shadow-xl">
+          <h3 className="text-xs font-bold font-mono tracking-wider text-red-400 uppercase flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-red-500"></span>
+            <span>Format Preference</span>
+          </h3>
+          <div className="flex flex-wrap gap-2.5">
             {contentTypes.map((type) => {
               const active = filters.content_type.includes(type.value);
               return (
@@ -185,13 +195,13 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
                   type="button"
                   key={type.value}
                   onClick={() => handleToggleContentType(type.value)}
-                  className={`px-4 py-2.5 rounded-lg text-sm font-semibold border transition-all duration-200 flex items-center space-x-1.5 ${
+                  className={`px-5 py-3 rounded-2xl text-xs font-extrabold border transition-all duration-200 flex items-center space-x-2 cursor-pointer font-sans ${
                     active 
-                      ? 'bg-wm-accent text-white border-wm-accent shadow-md' 
-                      : 'bg-wm-card border-gray-800 text-gray-300 hover:text-white hover:bg-wm-card-hover'
+                      ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-red-500 shadow-[0_0_20px_-3px_rgba(229,9,20,0.5)]' 
+                      : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:border-white/20'
                   }`}
                 >
-                  {active && <Check className="w-4 h-4" />}
+                  {active && <Check className="w-4 h-4 text-white" />}
                   <span>{type.label}</span>
                 </button>
               );
@@ -200,9 +210,12 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
         </div>
 
         {/* 2. Mood Scale and Tone */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase">Mood & Tone Vibe</h3>
-          <div className="flex flex-wrap gap-2">
+        <div className="glass-card border border-white/10 p-6 rounded-3xl space-y-4 shadow-xl">
+          <h3 className="text-xs font-bold font-mono tracking-wider text-red-400 uppercase flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-red-500"></span>
+            <span>Mood & Tone Vibe</span>
+          </h3>
+          <div className="flex flex-wrap gap-2.5">
             {moodsList.map((mood) => {
               const active = filters.moods.includes(mood);
               return (
@@ -211,13 +224,13 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
                   type="button"
                   key={mood}
                   onClick={() => handleToggleMood(mood)}
-                  className={`px-4 py-2.5 rounded-lg text-sm font-semibold border transition-all duration-200 flex items-center space-x-1.5 capitalize ${
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold border transition-all duration-200 flex items-center space-x-1.5 capitalize cursor-pointer font-sans ${
                     active 
-                      ? 'bg-wm-accent text-white border-wm-accent shadow-md' 
-                      : 'bg-wm-card border-gray-800 text-gray-300 hover:text-white hover:bg-wm-card-hover'
+                      ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-red-500 shadow-md' 
+                      : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:border-white/20'
                   }`}
                 >
-                  {active && <Check className="w-4 h-4" />}
+                  {active && <Check className="w-3.5 h-3.5 text-white" />}
                   <span>{mood}</span>
                 </button>
               );
@@ -226,9 +239,12 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
         </div>
 
         {/* 3. Pace Choice */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase">Narrative Pacing</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="glass-card border border-white/10 p-6 rounded-3xl space-y-4 shadow-xl">
+          <h3 className="text-xs font-bold font-mono tracking-wider text-red-400 uppercase flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-red-500"></span>
+            <span>Narrative Pacing</span>
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {['any', 'slow', 'medium', 'fast'].map((p) => {
               const active = filters.pace === p;
               return (
@@ -237,10 +253,10 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
                   type="button"
                   key={p}
                   onClick={() => setFilters(prev => ({ ...prev, pace: p as any }))}
-                  className={`py-3 rounded-lg text-sm font-semibold border transition-all text-center capitalize ${
+                  className={`py-3.5 rounded-2xl text-xs font-extrabold border transition-all text-center capitalize cursor-pointer font-sans ${
                     active 
-                      ? 'bg-wm-accent text-white border-wm-accent shadow-md' 
-                      : 'bg-wm-card border-gray-800 text-gray-300 hover:text-white hover:bg-wm-card-hover'
+                      ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-red-500 shadow-md' 
+                      : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:border-white/20'
                   }`}
                 >
                   {p === 'any' ? 'Any Pace' : p === 'slow' ? 'Slow Burn' : p === 'medium' ? 'Balanced' : 'Fast-Paced'}
@@ -251,64 +267,72 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
         </div>
 
         {/* 4. Watch Commitment */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase">Watch Commitment Size</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="glass-card border border-white/10 p-6 rounded-3xl space-y-4 shadow-xl">
+          <h3 className="text-xs font-bold font-mono tracking-wider text-red-400 uppercase flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-red-500"></span>
+            <span>Watch Commitment Size</span>
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-sans">
             <button
               id="filter-commitment-short"
               type="button"
               onClick={() => handleCommitment('short')}
-              className={`p-4 rounded-lg border text-left transition-all ${
+              className={`p-5 rounded-2xl border text-left transition-all cursor-pointer ${
                 filters.runtime_max_minutes === 90 
-                  ? 'bg-wm-card border-wm-accent text-white shadow-lg' 
-                  : 'bg-wm-card border-gray-800 hover:border-gray-700 hover:bg-wm-card-hover'
+                  ? 'bg-red-500/15 border-red-500 text-white shadow-[0_0_20px_-5px_rgba(229,9,20,0.5)]' 
+                  : 'bg-white/5 border-white/10 hover:border-white/20'
               }`}
             >
-              <div className="font-bold text-sm text-white flex items-center justify-between">
+              <div className="font-extrabold text-sm text-white flex items-center justify-between font-heading">
                 <span>Under 90 Minutes</span>
-                {filters.runtime_max_minutes === 90 && <Check className="w-4 h-4 text-wm-accent" />}
+                {filters.runtime_max_minutes === 90 && <Check className="w-4 h-4 text-red-500" />}
               </div>
-              <p className="text-gray-400 text-xs mt-1">Perfect for a quick, impactful movie night with no fluff.</p>
+              <p className="text-gray-400 text-xs mt-1.5 leading-relaxed">Perfect for a quick, impactful movie night with zero filler.</p>
             </button>
+
             <button
               id="filter-commitment-medium"
               type="button"
               onClick={() => handleCommitment('medium')}
-              className={`p-4 rounded-lg border text-left transition-all ${
+              className={`p-5 rounded-2xl border text-left transition-all cursor-pointer ${
                 filters.max_total_watch_hours === 15 && filters.runtime_max_minutes !== 90
-                  ? 'bg-wm-card border-wm-accent text-white shadow-lg' 
-                  : 'bg-wm-card border-gray-800 hover:border-gray-700 hover:bg-wm-card-hover'
+                  ? 'bg-red-500/15 border-red-500 text-white shadow-[0_0_20px_-5px_rgba(229,9,20,0.5)]' 
+                  : 'bg-white/5 border-white/10 hover:border-white/20'
               }`}
             >
-              <div className="font-bold text-sm text-white flex items-center justify-between">
+              <div className="font-extrabold text-sm text-white flex items-center justify-between font-heading">
                 <span>Weekend Binge (&lt; 15 hrs)</span>
-                {filters.max_total_watch_hours === 15 && filters.runtime_max_minutes !== 90 && <Check className="w-4 h-4 text-wm-accent" />}
+                {filters.max_total_watch_hours === 15 && filters.runtime_max_minutes !== 90 && <Check className="w-4 h-4 text-red-500" />}
               </div>
-              <p className="text-gray-400 text-xs mt-1">Perfect size for limited series, finished storyboards.</p>
+              <p className="text-gray-400 text-xs mt-1.5 leading-relaxed">Ideal size for limited series and complete story arcs.</p>
             </button>
+
             <button
               id="filter-commitment-long"
               type="button"
               onClick={() => handleCommitment('long')}
-              className={`p-4 rounded-lg border text-left transition-all ${
+              className={`p-5 rounded-2xl border text-left transition-all cursor-pointer ${
                 filters.max_total_watch_hours === 50
-                  ? 'bg-wm-card border-wm-accent text-white shadow-lg' 
-                  : 'bg-wm-card border-gray-800 hover:border-gray-700 hover:bg-wm-card-hover'
+                  ? 'bg-red-500/15 border-red-500 text-white shadow-[0_0_20px_-5px_rgba(229,9,20,0.5)]' 
+                  : 'bg-white/5 border-white/10 hover:border-white/20'
               }`}
             >
-              <div className="font-bold text-sm text-white flex items-center justify-between">
+              <div className="font-extrabold text-sm text-white flex items-center justify-between font-heading">
                 <span>Long Binge (Multi-Season)</span>
-                {filters.max_total_watch_hours === 50 && <Check className="w-4 h-4 text-wm-accent" />}
+                {filters.max_total_watch_hours === 50 && <Check className="w-4 h-4 text-red-500" />}
               </div>
-              <p className="text-gray-400 text-xs mt-1">Immersive stories, many seasons to lose yourself in.</p>
+              <p className="text-gray-400 text-xs mt-1.5 leading-relaxed">Deep immersive worlds with multiple rich seasons.</p>
             </button>
           </div>
         </div>
 
         {/* 5. Genres */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase">Genres of Interest</h3>
-          <div className="flex flex-wrap gap-2">
+        <div className="glass-card border border-white/10 p-6 rounded-3xl space-y-4 shadow-xl">
+          <h3 className="text-xs font-bold font-mono tracking-wider text-red-400 uppercase flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-red-500"></span>
+            <span>Genres of Interest</span>
+          </h3>
+          <div className="flex flex-wrap gap-2.5">
             {genresList.map((g) => {
               const active = filters.genres.includes(g);
               return (
@@ -317,10 +341,10 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
                   type="button"
                   key={g}
                   onClick={() => handleToggleGenre(g)}
-                  className={`px-3.5 py-2 rounded-lg text-xs font-semibold border transition ${
+                  className={`px-4 py-2 rounded-xl text-xs font-bold border transition cursor-pointer font-mono uppercase ${
                     active 
-                      ? 'bg-wm-accent text-white border-wm-accent' 
-                      : 'bg-wm-card border-gray-800 text-gray-300 hover:text-white hover:bg-wm-card-hover'
+                      ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-red-500 shadow-md' 
+                      : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:border-white/20'
                   }`}
                 >
                   {g}
@@ -331,9 +355,12 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
         </div>
 
         {/* 6. Content Controls (Avoid) */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase">Content Exclusions (Avoid)</h3>
-          <div className="flex flex-wrap gap-2">
+        <div className="glass-card border border-white/10 p-6 rounded-3xl space-y-4 shadow-xl">
+          <h3 className="text-xs font-bold font-mono tracking-wider text-red-400 uppercase flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-red-500"></span>
+            <span>Content Exclusions (Avoid)</span>
+          </h3>
+          <div className="flex flex-wrap gap-2.5">
             {['Romance', 'Excessive Gore', 'Extreme Violence', 'Jump Scares', 'Sad Ending', 'Cliffhangers'].map((exc) => {
               const active = filters.content_exclusions.includes(exc.toLowerCase());
               return (
@@ -342,10 +369,10 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
                   type="button"
                   key={exc}
                   onClick={() => handleToggleExclusion(exc.toLowerCase())}
-                  className={`px-3.5 py-2 rounded-lg text-xs font-mono font-bold border transition ${
+                  className={`px-4 py-2.5 rounded-xl text-xs font-mono font-extrabold border transition cursor-pointer ${
                     active 
-                      ? 'bg-red-950 text-red-300 border-red-700' 
-                      : 'bg-wm-card border-gray-800 text-gray-400 hover:text-red-400 hover:border-red-900'
+                      ? 'bg-red-500/25 text-red-200 border-red-500 shadow' 
+                      : 'bg-white/5 border-white/10 text-gray-400 hover:text-red-300 hover:border-red-500/40'
                   }`}
                 >
                   <span>Avoid {exc}</span>
@@ -356,9 +383,12 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
         </div>
 
         {/* 7. Streaming Platforms */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase">Available Platforms</h3>
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+        <div className="glass-card border border-white/10 p-6 rounded-3xl space-y-4 shadow-xl">
+          <h3 className="text-xs font-bold font-mono tracking-wider text-red-400 uppercase flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-red-500"></span>
+            <span>Available Platforms</span>
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
             {platformsList.map((plat) => {
               const active = filters.platform_preferences.includes(plat);
               return (
@@ -367,10 +397,10 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
                   type="button"
                   key={plat}
                   onClick={() => handleTogglePlatform(plat)}
-                  className={`py-2.5 rounded-lg text-xs font-bold border transition text-center ${
+                  className={`py-3 rounded-xl text-xs font-extrabold border transition text-center cursor-pointer font-sans ${
                     active 
-                      ? 'bg-white text-wm-bg border-white font-black' 
-                      : 'bg-wm-card border-gray-800 text-gray-400 hover:text-white hover:bg-wm-card-hover'
+                      ? 'bg-white text-black border-white shadow-lg' 
+                      : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:border-white/20'
                   }`}
                 >
                   {plat}
@@ -381,9 +411,12 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
         </div>
 
         {/* 8. Languages */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase">Languages</h3>
-          <div className="flex flex-wrap gap-2">
+        <div className="glass-card border border-white/10 p-6 rounded-3xl space-y-4 shadow-xl">
+          <h3 className="text-xs font-bold font-mono tracking-wider text-red-400 uppercase flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-red-500"></span>
+            <span>Languages</span>
+          </h3>
+          <div className="flex flex-wrap gap-2.5">
             {languagesList.map((lang) => {
               const active = filters.language_preferences.includes(lang);
               return (
@@ -392,10 +425,10 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
                   type="button"
                   key={lang}
                   onClick={() => handleToggleLanguage(lang)}
-                  className={`px-3.5 py-2 rounded-lg text-xs font-semibold border transition ${
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold border transition cursor-pointer font-sans ${
                     active 
-                      ? 'bg-wm-accent text-white border-wm-accent' 
-                      : 'bg-wm-card border-gray-800 text-gray-300 hover:text-white hover:bg-wm-card-hover'
+                      ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white border-red-500 shadow-md' 
+                      : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:border-white/20'
                   }`}
                 >
                   {lang}
@@ -406,12 +439,12 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
         </div>
 
         {/* Submit */}
-        <div className="pt-6 border-t border-gray-800 flex justify-end">
+        <div className="pt-6 border-t border-white/10 flex justify-end">
           <button
             id="filter-scout-submit"
             type="submit"
             disabled={isLoading}
-            className="w-full md:w-auto px-8 py-4 bg-wm-accent hover:bg-red-700 text-white font-bold rounded-lg transition shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-base"
+            className="w-full md:w-auto px-10 py-4.5 bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 hover:scale-[1.02] text-white font-extrabold rounded-2xl transition duration-200 shadow-[0_0_35px_-5px_rgba(229,9,20,0.6)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2.5 text-base cursor-pointer"
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -427,3 +460,4 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
     </div>
   );
 }
+

@@ -77,26 +77,32 @@ export default function HomeView({ onSearchSubmit, isLoading }: HomeViewProps) {
   return (
     <div className="w-full relative z-10 pb-20">
       {/* Hero Section */}
-      <section className="relative pt-20 sm:pt-24 pb-16 px-4 sm:px-6 lg:px-8 text-center bg-[url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center bg-no-repeat before:absolute before:inset-0 before:bg-wm-bg/80 before:hero-bg before:z-[-1]">
-        <div className="max-w-5xl mx-auto space-y-8 relative z-10">
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight leading-tight">
+      <section className="relative pt-24 sm:pt-28 pb-20 px-4 sm:px-6 lg:px-8 text-center">
+        <div className="max-w-4xl mx-auto space-y-8 relative z-10">
+          <div className="inline-flex items-center space-x-2 bg-red-500/10 border border-red-500/30 px-4 py-1.5 rounded-full text-red-400 font-mono text-xs font-bold uppercase tracking-wider backdrop-blur-md shadow-lg">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>AI-Powered Cinephile Engine</span>
+          </div>
+
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-none font-heading drop-shadow-lg">
             <span className="text-white block">Stop scrolling.</span>
-            <span className="block text-wm-accent mt-2">
-              Describe what you feel.
+            <span className="block bg-gradient-to-r from-red-500 via-rose-500 to-amber-500 bg-clip-text text-transparent mt-3">
+              Describe your mood.
             </span>
           </h1>
-          <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto font-medium leading-relaxed">
-            Tell WatchMatch what you want to feel, avoid, and finish—and get<br className="hidden sm:block"/> a trusted shortlist of movies and series that fit.
+
+          <p className="text-base sm:text-lg text-gray-300 max-w-2xl mx-auto font-sans leading-relaxed">
+            Tell WatchMatch what you want to feel, avoid, and finish—and get a trusted shortlist of movies and series that fit your exact vibe.
           </p>
 
           {/* Search Input Area */}
-          <div className="mt-12 max-w-3xl mx-auto">
+          <div className="mt-10 max-w-3xl mx-auto">
             <form 
               onSubmit={handleSubmit} 
               id="discovery-form" 
-              className="relative flex items-center w-full bg-wm-card rounded-lg overflow-hidden border border-gray-700/50 shadow-2xl focus-within:border-wm-accent transition-colors"
+              className="relative flex items-center w-full glass-input rounded-2xl overflow-hidden border border-white/15 shadow-[0_0_50px_-10px_rgba(229,9,20,0.25)] focus-within:border-red-500/60 focus-within:shadow-[0_0_60px_0_rgba(229,9,20,0.4)] transition-all duration-300 p-1.5"
             >
-              <div className="pl-5 pr-3 text-gray-400 flex items-center justify-center">
+              <div className="pl-4 pr-2 text-red-500 flex items-center justify-center">
                 <Search className="w-6 h-6" />
               </div>
               <input
@@ -106,13 +112,13 @@ export default function HomeView({ onSearchSubmit, isLoading }: HomeViewProps) {
                 onChange={(e) => setQuery(e.target.value)}
                 disabled={isLoading}
                 placeholder="e.g., A dark mystery series like Dark, but faster and already finished"
-                className="w-full bg-transparent border-none text-white focus:ring-0 placeholder-gray-500 text-lg py-5 font-medium focus:outline-none"
+                className="w-full bg-transparent border-none text-white focus:ring-0 placeholder-gray-500 text-base sm:text-lg py-4 px-2 font-medium focus:outline-none"
               />
               <button
                 id="scout-submit-btn"
                 type="submit"
                 disabled={isLoading || !query.trim()}
-                className="bg-wm-accent hover:bg-red-700 text-white font-bold px-8 py-5 flex items-center gap-2 transition-colors text-lg h-full disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold px-8 py-4 rounded-xl flex items-center gap-2 transition-all duration-200 text-base shadow-[0_0_25px_-5px_rgba(229,9,20,0.6)] disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -129,8 +135,11 @@ export default function HomeView({ onSearchSubmit, isLoading }: HomeViewProps) {
       </section>
 
       {/* Mood Description Section */}
-      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-6">
-        <h3 className="text-xl font-bold text-white">Try describing your mood</h3>
+      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+        <h3 className="text-xl font-extrabold text-white font-heading flex items-center space-x-2">
+          <span className="w-2 h-2 rounded-full bg-red-500"></span>
+          <span>Try describing your mood</span>
+        </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {quickPrompts.map((prompt, i) => (
             <button
@@ -141,13 +150,13 @@ export default function HomeView({ onSearchSubmit, isLoading }: HomeViewProps) {
                 onSearchSubmit(prompt.text);
               }}
               disabled={isLoading}
-              className="text-left bg-wm-card p-6 rounded-md hover:bg-wm-card-hover hover:scale-[1.02] transition-all duration-200 group border border-transparent hover:border-gray-600 shadow-md flex flex-col justify-between h-full"
+              className="text-left glass-card p-6 rounded-2xl hover:-translate-y-1 transition duration-300 group border border-white/10 hover:border-red-500/40 shadow-xl flex flex-col justify-between h-full"
             >
               <div>
-                <span className="text-lg font-bold text-white group-hover:text-wm-accent transition-colors block mb-2">
+                <span className="text-base font-extrabold text-white group-hover:text-red-400 transition-colors block mb-2 font-heading">
                   {prompt.title}
                 </span>
-                <p className="text-sm text-gray-400 leading-relaxed group-hover:text-gray-300 transition-colors">
+                <p className="text-xs sm:text-sm text-gray-400 leading-relaxed group-hover:text-gray-200 transition-colors font-sans">
                   "{prompt.text}"
                 </p>
               </div>
@@ -157,12 +166,15 @@ export default function HomeView({ onSearchSubmit, isLoading }: HomeViewProps) {
       </section>
 
       {/* Trending Curated Directions Section */}
-      <section className="max-w-[1400px] mx-auto py-12 space-y-6">
+      <section className="max-w-[1400px] mx-auto py-10 space-y-6">
         <div className="px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-white mb-2">Trending Curated Directions</h2>
+          <h2 className="text-2xl font-extrabold text-white mb-2 font-heading flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-red-500"></span>
+            <span>Trending Curated Directions</span>
+          </h2>
         </div>
         <div className="px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {curatedCollections.map((col, i) => {
               const Icon = col.icon;
               return (
@@ -173,17 +185,17 @@ export default function HomeView({ onSearchSubmit, isLoading }: HomeViewProps) {
                     setQuery(col.prompt);
                     onSearchSubmit(col.prompt);
                   }}
-                  className={`w-full min-h-[280px] relative rounded-md overflow-hidden group bg-gradient-to-br ${col.gradient} transition-transform duration-300 hover:scale-105 cursor-pointer shadow-lg`}
+                  className={`w-full min-h-[260px] relative rounded-3xl overflow-hidden group glass-card transition duration-300 hover:scale-[1.03] cursor-pointer shadow-2xl border border-white/10 hover:border-red-500/40`}
                 >
-                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors"></div>
+                  <div className={`absolute inset-0 bg-gradient-to-br ${col.gradient} opacity-40 group-hover:opacity-60 transition duration-300`}></div>
                   <div className="absolute inset-0 p-6 flex flex-col justify-end">
-                    <div className="w-10 h-10 mb-4 text-white flex items-center justify-center">
-                      <Icon className="w-8 h-8" />
+                    <div className="w-12 h-12 mb-4 text-white flex items-center justify-center p-2.5 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 shadow-md">
+                      <Icon className="w-6 h-6 text-red-400" />
                     </div>
-                    <h4 className="text-xl font-bold text-white mb-2 leading-tight">
+                    <h4 className="text-lg font-extrabold text-white mb-2 leading-tight font-heading">
                       {col.title}
                     </h4>
-                    <p className="text-sm text-gray-300 line-clamp-3">
+                    <p className="text-xs text-gray-300 line-clamp-3 font-sans leading-relaxed">
                       {col.description}
                     </p>
                   </div>
@@ -196,4 +208,5 @@ export default function HomeView({ onSearchSubmit, isLoading }: HomeViewProps) {
     </div>
   );
 }
+
 
