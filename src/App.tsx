@@ -373,8 +373,13 @@ export default function App() {
             ) : (
               <HomeView 
                 onSearchSubmit={handleSearchSubmit} 
-                isLoading={isLoading} 
+                isLoading={isLoading}
+                onSelectMovie={(movie) => {
+                  saveMoviesToDict([movie]);
+                  setSelectedMovie(movie);
+                }} 
               />
+
             )}
           </>
         )}

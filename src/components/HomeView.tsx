@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import { Search, Sparkles, Flame, Clock, Compass } from 'lucide-react';
+import { Search, Sparkles, Flame, Clock, Compass, Film } from 'lucide-react';
+import { curatedMovies } from '../data/curatedMovies';
+import { Movie } from '../types';
+import { getCleanImageUrl, handleImageLoadError } from '../utils/imageHelper';
 
 interface HomeViewProps {
   onSearchSubmit: (text: string) => void;
   isLoading: boolean;
+  onSelectMovie?: (movie: Movie) => void;
 }
 
-export default function HomeView({ onSearchSubmit, isLoading }: HomeViewProps) {
+export default function HomeView({ onSearchSubmit, isLoading, onSelectMovie }: HomeViewProps) {
   const [query, setQuery] = useState('');
 
   const quickPrompts = [
@@ -74,12 +78,20 @@ export default function HomeView({ onSearchSubmit, isLoading }: HomeViewProps) {
     }
   };
 
-  const spotlightPosters = [
-    { title: "Dark", year: "2017", img: "https://image.tmdb.org/t/p/w500/apbrb68p7Adp669U706967v6Ur0.jpg", tag: "Sci-Fi Mystery" },
-    { title: "Interstellar", year: "2014", img: "https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6Mxl4vWio.jpg", tag: "Epic Sci-Fi" },
-    { title: "Squid Game", year: "2021", img: "https://image.tmdb.org/t/p/w500/dDlEmu3EZ0Pgg93K2SVN2iGDvKh.jpg", tag: "Survival Thriller" },
-    { title: "Normal People", year: "2020", img: "https://image.tmdb.org/t/p/w500/u55aFmDFA8jFjYwRj8M93XzYV4w.jpg", tag: "Dark Romance" },
+  const spotlightTitles = [
+    { name: "Dark", tag: "Sci-Fi Mystery" },
+    { name: "Interstellar", tag: "Epic Sci-Fi" },
+    { name: "Squid Game", tag: "Survival Thriller" },
+    { name: "Normal People", tag: "Dark Romance" }
   ];
+
+  const spotlightMovies = spotlightTitles.map(st => {
+    const found = curatedMovies.find(m => m.title.toLowerCase() === st.name.toLowerCase());
+    return {
+      movie: found || curatedMovies[0],
+      tag: st.tag
+    };
+  });
 
   return (
     <div className="w-full relative z-10 pb-20">
@@ -146,26 +158,32 @@ export default function HomeView({ onSearchSubmit, isLoading }: HomeViewProps) {
           {/* Right 5 Columns: Visual Movie Poster Graphic Cards */}
           <div className="lg:col-span-5 relative hidden lg:block">
             <div className="grid grid-cols-2 gap-4 relative z-10">
-              {spotlightPosters.map((item, idx) => (
+              {spotlightMovies.map((item, idx) => (
                 <div 
                   key={idx} 
-                  className={`glass-card rounded-3xl overflow-hidden border border-white/15 shadow-2xl relative group transform transition duration-500 hover:scale-105 ${idx % 2 === 1 ? 'translate-y-6' : ''}`}
+                  onClick={() => {
+                    if (onSelectMovie) onSelectMovie(item.movie);
+                    else onSearchSubmit(item.movie.title);
+                  }}
+                  className={`glass-card rounded-3xl overflow-hidden border border-white/15 shadow-2xl relative group transform transition duration-500 hover:scale-105 cursor-pointer ${idx % 2 === 1 ? 'translate-y-6' : ''}`}
                 >
                   <div className="h-64 overflow-hidden relative">
                     <img 
-                      src={item.img} 
-                      alt={item.title} 
+                      src={getCleanImageUrl(item.movie.posterUrl, 'poster')} 
+                      alt={item.movie.title} 
+                      referrerPolicy="no-referrer"
                       className="w-full h-full object-cover group-hover:scale-110 transition duration-700 filter brightness-95"
+                      onError={(e) => handleImageLoadError(e, item.movie.backdropUrl)}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#070709] via-black/20 to-transparent"></div>
                     <div className="absolute top-3 left-3">
-                      <span className="bg-red-500/20 text-red-300 border border-red-500/40 text-[10px] font-mono font-bold px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-md">
+                      <span className="bg-red-500/20 text-red-300 border border-red-500/40 text-[10px] font-mono font-bold px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-md shadow">
                         {item.tag}
                       </span>
                     </div>
                     <div className="absolute bottom-3 left-3 right-3">
-                      <h4 className="text-white font-extrabold text-base font-heading drop-shadow">{item.title}</h4>
-                      <span className="text-gray-400 text-xs font-mono">{item.year}</span>
+                      <h4 className="text-white font-extrabold text-base font-heading drop-shadow group-hover:text-red-400 transition">{item.movie.title}</h4>
+                      <span className="text-gray-400 text-xs font-mono">{item.movie.year}</span>
                     </div>
                   </div>
                 </div>
@@ -177,6 +195,7 @@ export default function HomeView({ onSearchSubmit, isLoading }: HomeViewProps) {
 
         </div>
       </section>
+
 
       {/* Mood Description Section */}
       <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-10 space-y-6">
