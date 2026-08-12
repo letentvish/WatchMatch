@@ -13,6 +13,13 @@ export function getCleanImageUrl(url: string | undefined, type: 'poster' | 'back
       : 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1200&q=80&auto=format&fit=crop';
   }
 
+  // Wikimedia Commons blocks hotlinking with 403 Forbidden in external img tags
+  if (url.includes('upload.wikimedia.org')) {
+    return type === 'poster'
+      ? 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500&q=80&auto=format&fit=crop'
+      : 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1200&q=80&auto=format&fit=crop';
+  }
+
   // Detect explicit Unsplash photo IDs erroneously wrapped in a TMDB path (e.g. photo-153444...)
   if (url.includes('image.tmdb.org/t/p/') && (url.includes('photo-') || url.includes('15344') || url.includes('15091') || url.includes('14895'))) {
     const filename = url.split('/').pop() || '';
@@ -23,6 +30,7 @@ export function getCleanImageUrl(url: string | undefined, type: 'poster' | 'back
 
   return url;
 }
+
 
 
 /**
