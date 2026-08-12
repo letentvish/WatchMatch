@@ -155,7 +155,7 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10 space-y-8" id="filter-builder-view">
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-10 space-y-8" id="filter-builder-view">
       {/* Header */}
       <div className="glass-panel border border-white/15 p-6 md:p-8 rounded-3xl flex items-center justify-between shadow-2xl backdrop-blur-2xl">
         <div className="flex items-center space-x-4">
@@ -179,7 +179,10 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8" id="filter-builder-form">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start" id="filter-builder-form">
+        {/* LEFT 8 COLUMNS: Filter Controls */}
+        <div className="lg:col-span-8 space-y-8">
+
         {/* 1. Format / Content Type */}
         <div className="glass-card border border-white/10 p-6 rounded-3xl space-y-4 shadow-xl">
           <h3 className="text-xs font-bold font-mono tracking-wider text-red-400 uppercase flex items-center space-x-2">
@@ -437,27 +440,79 @@ export default function FilterBuilder({ initialFilters, onApplyFilters, isLoadin
             })}
           </div>
         </div>
+        </div>
 
-        {/* Submit */}
-        <div className="pt-6 border-t border-white/10 flex justify-end">
-          <button
-            id="filter-scout-submit"
-            type="submit"
-            disabled={isLoading}
-            className="w-full md:w-auto px-10 py-4.5 bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 hover:scale-[1.02] text-white font-extrabold rounded-2xl transition duration-200 shadow-[0_0_35px_-5px_rgba(229,9,20,0.6)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2.5 text-base cursor-pointer"
-          >
-            {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              <>
-                <Sparkles className="w-5 h-5" />
-                <span>Search with Structured Filters</span>
-              </>
-            )}
-          </button>
+        {/* RIGHT 4 COLUMNS: Sticky Active Filter Summary & Submit Panel */}
+
+
+        <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
+          <div className="glass-panel border border-white/15 p-6 md:p-8 rounded-3xl space-y-6 shadow-2xl backdrop-blur-2xl">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <h3 className="text-sm font-black text-white font-heading uppercase tracking-wider flex items-center space-x-2">
+                <Sparkles className="w-4 h-4 text-red-500" />
+                <span>Console Summary</span>
+              </h3>
+              <span className="bg-red-500/20 text-red-300 border border-red-500/30 text-[10px] font-mono px-2 py-0.5 rounded-full font-bold">
+                Active
+              </span>
+            </div>
+
+            <div className="space-y-4 text-xs font-sans">
+              <div>
+                <span className="text-gray-400 font-mono text-[10px] uppercase font-bold block mb-1">Selected Formats</span>
+                <span className="text-white font-extrabold text-sm block">
+                  {filters.content_type.length > 0 ? filters.content_type.map(formatContentType).join(', ') : 'All Formats (Any)'}
+                </span>
+              </div>
+
+              <div>
+                <span className="text-gray-400 font-mono text-[10px] uppercase font-bold block mb-1">Selected Moods</span>
+                <span className="text-white font-extrabold text-sm block capitalize">
+                  {filters.moods.length > 0 ? filters.moods.join(', ') : 'Any Mood'}
+                </span>
+              </div>
+
+              <div>
+                <span className="text-gray-400 font-mono text-[10px] uppercase font-bold block mb-1">Pacing & Commitment</span>
+                <span className="text-white font-extrabold text-sm block capitalize">
+                  {filters.pace} pace · {filters.runtime_max_minutes ? `Under ${filters.runtime_max_minutes} mins` : 'Any duration'}
+                </span>
+              </div>
+
+              {filters.content_exclusions.length > 0 && (
+                <div>
+                  <span className="text-red-400 font-mono text-[10px] uppercase font-bold block mb-1">Content Exclusions</span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {filters.content_exclusions.map((e, idx) => (
+                      <span key={idx} className="bg-red-500/20 text-red-300 border border-red-500/40 text-[10px] px-2 py-0.5 rounded font-mono font-bold uppercase">
+                        Avoid {e}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button
+              id="filter-scout-submit"
+              type="submit"
+              disabled={isLoading}
+              className="w-full px-8 py-4.5 bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 hover:scale-[1.02] text-white font-extrabold rounded-2xl transition duration-200 shadow-[0_0_35px_-5px_rgba(229,9,20,0.6)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2.5 text-base cursor-pointer"
+            >
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5" />
+                  <span>Execute Filter Scout</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </form>
     </div>
   );
 }
+
 

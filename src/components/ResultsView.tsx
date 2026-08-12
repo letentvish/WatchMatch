@@ -84,7 +84,7 @@ export default function ResultsView({
   const otherRecs = recommendations.recommendations || [];
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-12">
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-10">
       {/* Top Summary Banner */}
       {recommendations.summary && (
         <div className="glass-panel border border-white/15 p-6 rounded-3xl shadow-2xl flex items-start space-x-4 backdrop-blur-2xl">
@@ -95,13 +95,20 @@ export default function ResultsView({
             <div className="flex items-center space-x-2">
               <h3 className="font-extrabold text-white text-lg font-heading">Personal Movie Scout Analysis</h3>
               <span className="bg-red-500/20 text-red-400 border border-red-500/30 font-mono text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">
-                Multi-Source Scout
+                Multi-Source Scout Engine
               </span>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed font-sans">{recommendations.summary}</p>
           </div>
         </div>
       )}
+
+      {/* Main 2-Column Grid Stage */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        {/* LEFT 8 COLUMNS: Main Recommendations Stage */}
+        <div className="lg:col-span-8 space-y-10">
+
 
       {/* 1. BEST MATCH HERO CARD */}
       {bestMatchMovie && (
@@ -443,7 +450,102 @@ export default function ResultsView({
           </div>
         </div>
       )}
+
+        </div> {/* END LEFT 8 COLUMNS */}
+
+        {/* RIGHT 4 COLUMNS: Sticky Live Cinephile Intelligence Sidebar */}
+        <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
+          {/* Scout DNA Card */}
+          <div className="glass-panel border border-white/15 p-6 rounded-3xl space-y-5 shadow-2xl backdrop-blur-2xl">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <h3 className="text-sm font-black text-white font-heading uppercase tracking-wider flex items-center space-x-2">
+                <Sparkles className="w-4 h-4 text-red-500" />
+                <span>Extracted Vibe DNA</span>
+              </h3>
+              <span className="bg-red-500/20 text-red-300 border border-red-500/30 text-[10px] font-mono px-2 py-0.5 rounded-full font-bold">
+                AI Active
+              </span>
+            </div>
+
+            <div className="space-y-3 font-sans text-xs">
+              <div>
+                <span className="text-gray-400 font-mono text-[10px] uppercase font-bold block mb-1.5">Detected Tropes & Vibes</span>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="bg-red-500/20 text-red-300 border border-red-500/40 px-2.5 py-1 rounded-lg font-bold">
+                    {recommendations.best_match.watch_commitment}
+                  </span>
+                  <span className="bg-white/10 text-gray-200 border border-white/15 px-2.5 py-1 rounded-lg font-bold">
+                    {recommendations.best_match.match_score}% High Precision
+                  </span>
+                </div>
+              </div>
+
+              {/* Match Precision Meter */}
+              <div className="pt-2">
+                <div className="flex justify-between text-[11px] font-mono text-gray-300 font-bold mb-1.5">
+                  <span>Match Confidence</span>
+                  <span className="text-red-400 font-bold">{recommendations.best_match.match_score}%</span>
+                </div>
+                <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden p-0.5 border border-white/10">
+                  <div 
+                    className="h-full bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 rounded-full transition-all duration-1000"
+                    style={{ width: `${recommendations.best_match.match_score}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Refinements Shortcuts */}
+          <div className="glass-panel border border-white/15 p-6 rounded-3xl space-y-4 shadow-2xl backdrop-blur-2xl">
+            <h3 className="text-xs font-extrabold font-mono text-gray-300 uppercase tracking-wider flex items-center space-x-2">
+              <Flame className="w-4 h-4 text-amber-400" />
+              <span>Quick Refinement Shortcuts</span>
+            </h3>
+
+            <div className="space-y-2">
+              {[
+                "Feature movies under 2 hours",
+                "High rated 8.0+ IMDb titles only",
+                "Show titles available on Netflix",
+                "Focus on emotional character stories",
+              ].map((refinement, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => onRefine(refinement)}
+                  className="w-full text-left glass-card hover:border-red-500/50 hover:bg-red-500/10 p-3 rounded-xl text-xs text-gray-300 hover:text-white font-semibold transition cursor-pointer flex items-center justify-between group"
+                >
+                  <span>{refinement}</span>
+                  <Sparkles className="w-3.5 h-3.5 text-gray-500 group-hover:text-red-400 transition" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Your Cinephile Stats Card */}
+          <div className="glass-panel border border-white/15 p-6 rounded-3xl space-y-4 shadow-2xl backdrop-blur-2xl">
+            <h3 className="text-xs font-extrabold font-mono text-gray-300 uppercase tracking-wider flex items-center space-x-2">
+              <Film className="w-4 h-4 text-rose-400" />
+              <span>Your Library Status</span>
+            </h3>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="glass-card p-3.5 rounded-2xl border border-white/10 text-center">
+                <span className="text-2xl font-black text-white font-heading block">{watchlistIds.length}</span>
+                <span className="text-[10px] font-mono font-bold text-gray-400 uppercase">Saved Watchlist</span>
+              </div>
+              <div className="glass-card p-3.5 rounded-2xl border border-white/10 text-center">
+                <span className="text-2xl font-black text-emerald-400 font-heading block">{watchedIds.length}</span>
+                <span className="text-[10px] font-mono font-bold text-gray-400 uppercase">Completed</span>
+              </div>
+            </div>
+          </div>
+
+        </div> {/* END RIGHT 4 COLUMNS */}
+
+      </div> {/* END 2-COLUMN GRID STAGE */}
     </div>
   );
 }
+
 

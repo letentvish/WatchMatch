@@ -83,35 +83,41 @@ export default function ProfileView({
     .map(x => x[0]);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-10" id="taste-profile-view">
-      {/* 1. Header Profile Summary */}
-      <div className="glass-panel border border-white/15 p-6 md:p-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden">
-        <div className="flex items-center space-x-5">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-600 to-rose-600 text-white flex items-center justify-center flex-shrink-0 shadow-[0_0_30px_-5px_rgba(229,9,20,0.6)] border border-white/20">
-            <User className="w-8 h-8 fill-white" />
-          </div>
-          <div className="text-center md:text-left space-y-1">
-            <div className="flex items-center justify-center md:justify-start space-x-2">
-              <h2 className="text-2xl font-black text-white font-heading">Your CineTaste Passport</h2>
-              <span className="bg-red-500/20 text-red-400 border border-red-500/40 text-[10px] font-mono px-2.5 py-0.5 rounded-full font-bold uppercase">
-                Active Profile
-              </span>
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-10" id="taste-profile-view">
+      {/* Main 2-Column Grid Stage */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        {/* LEFT 8 COLUMNS: CineTaste Passport & Library */}
+        <div className="lg:col-span-8 space-y-10">
+          {/* 1. Header Profile Summary */}
+          <div className="glass-panel border border-white/15 p-6 md:p-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden">
+            <div className="flex items-center space-x-5">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-600 to-rose-600 text-white flex items-center justify-center flex-shrink-0 shadow-[0_0_30px_-5px_rgba(229,9,20,0.6)] border border-white/20">
+                <User className="w-8 h-8 fill-white" />
+              </div>
+              <div className="text-center md:text-left space-y-1">
+                <div className="flex items-center justify-center md:justify-start space-x-2">
+                  <h2 className="text-2xl font-black text-white font-heading">Your CineTaste Passport</h2>
+                  <span className="bg-red-500/20 text-red-400 border border-red-500/40 text-[10px] font-mono px-2.5 py-0.5 rounded-full font-bold uppercase">
+                    Active Profile
+                  </span>
+                </div>
+                <p className="text-gray-300 text-xs sm:text-sm font-sans leading-relaxed">
+                  WatchMatch continuously learns from your likes, dislikes, and viewing history to craft hyper-personalized recommendations.
+                </p>
+              </div>
             </div>
-            <p className="text-gray-300 text-xs sm:text-sm font-sans leading-relaxed">
-              WatchMatch continuously learns from your likes, dislikes, and viewing history to craft hyper-personalized recommendations.
-            </p>
-          </div>
-        </div>
 
-        <button
-          id="btn-clear-profile"
-          onClick={onResetTasteProfile}
-          className="flex items-center space-x-2 text-xs text-gray-300 hover:text-red-400 glass-card border border-white/15 hover:border-red-500/40 px-4 py-3 rounded-xl font-bold transition duration-200 shrink-0 cursor-pointer"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>Clear Taste History</span>
-        </button>
-      </div>
+            <button
+              id="btn-clear-profile"
+              onClick={onResetTasteProfile}
+              className="flex items-center space-x-2 text-xs text-gray-300 hover:text-red-400 glass-card border border-white/15 hover:border-red-500/40 px-4 py-3 rounded-xl font-bold transition duration-200 shrink-0 cursor-pointer font-mono"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Clear Taste History</span>
+            </button>
+          </div>
+
 
       {/* 2. AI CINEPHILE PERSONA IDENTITY CARD */}
       <div className="glass-panel border border-white/15 rounded-3xl p-6 md:p-8 space-y-6 shadow-[0_0_80px_-15px_rgba(229,9,20,0.3)] relative overflow-hidden backdrop-blur-2xl">
@@ -589,7 +595,88 @@ export default function ProfileView({
           </div>
         </div>
       )}
+        </div>
+
+
+
+
+
+        {/* RIGHT 4 COLUMNS: Sticky CineTaste Analytics & Insights Sidebar */}
+        <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
+          {/* Top Loved Genres */}
+          <div className="glass-panel border border-white/15 p-6 rounded-3xl space-y-4 shadow-2xl backdrop-blur-2xl">
+            <h3 className="text-sm font-black text-white font-heading uppercase tracking-wider flex items-center space-x-2">
+              <Award className="w-4 h-4 text-amber-400" />
+              <span>Top Loved Genres</span>
+            </h3>
+
+            {favoriteGenres.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {favoriteGenres.map((g, idx) => (
+                  <span 
+                    key={idx} 
+                    className="bg-gradient-to-r from-red-600 to-rose-600 text-white font-extrabold text-xs px-3.5 py-1.5 rounded-xl uppercase tracking-wider shadow-md"
+                  >
+                    {g}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400 font-sans">Like movie cards during search to populate your top genres.</p>
+            )}
+          </div>
+
+          {/* Favorite Mood Vibes */}
+          <div className="glass-panel border border-white/15 p-6 rounded-3xl space-y-4 shadow-2xl backdrop-blur-2xl">
+            <h3 className="text-sm font-black text-white font-heading uppercase tracking-wider flex items-center space-x-2">
+              <Zap className="w-4 h-4 text-rose-400" />
+              <span>Preferred Mood Vibes</span>
+            </h3>
+
+            {favoriteMoods.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {favoriteMoods.map((m, idx) => (
+                  <span 
+                    key={idx} 
+                    className="bg-white/10 text-gray-200 border border-white/15 font-bold text-xs px-3 py-1.5 rounded-xl capitalize shadow"
+                  >
+                    {m}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400 font-sans">Your preferred story vibes will automatically summarize here.</p>
+            )}
+          </div>
+
+          {/* Library Breakdown Stats */}
+          <div className="glass-panel border border-white/15 p-6 rounded-3xl space-y-4 shadow-2xl backdrop-blur-2xl">
+            <h3 className="text-sm font-black text-white font-heading uppercase tracking-wider flex items-center space-x-2">
+              <Film className="w-4 h-4 text-red-500" />
+              <span>Passport Metrics</span>
+            </h3>
+
+            <div className="space-y-3 font-mono text-xs">
+              <div className="flex justify-between items-center p-3 rounded-2xl bg-white/5 border border-white/10">
+                <span className="text-gray-300">Total Saved Watchlist</span>
+                <span className="font-bold text-white text-sm">{watchlistMovies.length}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 rounded-2xl bg-white/5 border border-white/10">
+                <span className="text-gray-300">Completed Movies</span>
+                <span className="font-bold text-emerald-400 text-sm">{watchedMovies.length}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 rounded-2xl bg-white/5 border border-white/10">
+                <span className="text-gray-300">Liked Titles</span>
+                <span className="font-bold text-rose-400 text-sm">{likedMovies.length}</span>
+              </div>
+            </div>
+          </div>
+
+        </div> {/* END RIGHT 4 COLUMNS */}
+
+      </div> {/* END 2-COLUMN GRID STAGE */}
     </div>
   );
 }
+
 
