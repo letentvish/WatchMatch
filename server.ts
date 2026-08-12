@@ -164,8 +164,31 @@ function extractLocalFilters(userMessage: string, existingPreferences: any): Sea
   }
 
   // Check if this is an explicit incremental refinement (e.g. "make it under 2 hours", "on netflix only")
-  const isRefinementOnly = msg.startsWith('only') || msg.startsWith('make') || msg.startsWith('more') || msg.startsWith('less') || msg.includes('shorter') || msg.includes('longer');
+
+  const isRefinementOnly = msg.startsWith('only') || msg.startsWith('make') || msg.startsWith('more') || msg.startsWith('less') || msg.includes('shorter') || msg.includes('longer') || msg.includes('netflix') || msg.includes('prime') || msg.includes('apple') || msg.includes('hulu');
   const prev = isRefinementOnly && existingPreferences ? existingPreferences : {};
+
+  // Parse platform preferences
+  const platform_preferences: string[] = prev.platform_preferences ? [...prev.platform_preferences] : [];
+
+  if (msg.includes('netflix')) {
+    if (!platform_preferences.includes('Netflix')) platform_preferences.push('Netflix');
+  }
+  if (msg.includes('prime') || msg.includes('amazon')) {
+    if (!platform_preferences.includes('Prime Video')) platform_preferences.push('Prime Video');
+  }
+  if (msg.includes('hotstar') || msg.includes('jio')) {
+    if (!platform_preferences.includes('JioHotstar')) platform_preferences.push('JioHotstar');
+  }
+  if (msg.includes('apple')) {
+    if (!platform_preferences.includes('Apple TV')) platform_preferences.push('Apple TV');
+  }
+  if (msg.includes('hulu')) {
+    if (!platform_preferences.includes('Hulu')) platform_preferences.push('Hulu');
+  }
+  if (msg.includes('disney')) {
+    if (!platform_preferences.includes('Disney+')) platform_preferences.push('Disney+');
+  }
 
   return {
     intent_type: 'recommendation',
@@ -187,7 +210,7 @@ function extractLocalFilters(userMessage: string, existingPreferences: any): Sea
     series_status: prev.series_status || 'any',
     ending_preference: prev.ending_preference || 'any',
     content_exclusions: prev.content_exclusions || [],
-    platform_preferences: prev.platform_preferences || [],
+    platform_preferences,
     similar_to_titles: similar_to_titles.length ? similar_to_titles : (isRefinementOnly ? prev.similar_to_titles || [] : []),
     similar_to_people: prev.similar_to_people || [],
     viewing_context: prev.viewing_context || 'any',
@@ -217,7 +240,9 @@ function generateFallbackRecommendations(userMessage: string, filters: SearchFil
   const normMsg = normalizeQueryText(userMessage);
   const msg = normMsg;
   const moodWords = ['dark', 'painful', 'sad', 'funny', 'scary', 'fast', 'slow', 'intense', 'comforting', 'romantic'];
-  const words = msg.split(/[\s,.'"]+/).filter(w => w.length > 2 && !['with', 'like', 'this', 'that', 'from', 'have', 'your', 'about', 'some', 'ending'].includes(w));
+  const platformStopWords = ['netflix', 'prime', 'apple', 'hulu', 'hotstar', 'disney', 'available', 'titles', 'shows', 'show', 'movies', 'movie', 'on', 'only', 'for', 'with', 'and', 'the'];
+  const words = msg.split(/[\s,.'"]+/).filter(w => w.length > 2 && !['with', 'like', 'this', 'that', 'from', 'have', 'your', 'about', 'some', 'ending', ...platformStopWords].includes(w));
+
 
   const isRomanceRequested = msg.includes('romantic') || msg.includes('romance') || msg.includes('love') || filters.genres?.some(g => g.toLowerCase() === 'romance');
   const isDarkPainfulRequested = msg.includes('dark') || msg.includes('painful') || msg.includes('sad') || msg.includes('heartbreak') || msg.includes('tragic') || msg.includes('emotional');
@@ -232,7 +257,29 @@ function generateFallbackRecommendations(userMessage: string, filters: SearchFil
     const moodsLower = (m.moods || []).map(md => md.toLowerCase());
     const themesLower = (m.themes || []).map(th => th.toLowerCase());
 
+    // Heavy penalty for meta talk shows, afterparties, or low-rated specials
+    const isMetaTalkShow = genresLower.some(g => ['talk', 'talk-show', 'game-show', 'short'].includes(g)) ||
+                           titleLower.includes('afterparty') ||
+                           titleLower.includes('behind the scenes') ||
+                           titleLower.includes('in conversation') ||
+                           titleLower.includes('recap') ||
+                           (m.rating && m.rating < 5.5);
+    if (isMetaTalkShow) {
+      score -= 60; // Never select meta talk shows like "The Netflix Afterparty"!
+    }
+
+    // Platform alignment boost
+    if (filters.platform_preferences?.length) {
+      const matchesPlatform = filters.platform_preferences.some(p => 
+        (m.platforms || []).some(mp => mp.toLowerCase().includes(p.toLowerCase()))
+      );
+      if (matchesPlatform) {
+        score += 30;
+      }
+    }
+
     // Korean content check
+
     const isKoreanRequested = msg.includes('korean') || filters.language_preferences?.includes('Korean') || filters.country_preferences?.includes('South Korea');
     if (isKoreanRequested) {
       const matchesKorean = langsLower.includes('korean') || countriesLower.some(c => c.includes('korea')) || synLower.includes('kore') || synLower.includes('seoul') || synLower.includes('kdrama') || titleLower.includes('korean');
@@ -701,17 +748,23 @@ async function fetchLiveCandidatesForQuery(userMessage: string, filters: SearchF
 
 
   // 3. Extract proper nouns / capitalized words from prompt
+  const platformWords = ['Netflix', 'Prime', 'Video', 'Amazon', 'Apple', 'Hulu', 'Disney', 'Jio', 'Hotstar', 'Show', 'Titles', 'Available', 'Only', 'Filter', 'Scout', 'Search'];
   const capMatches = userMessage.match(/([A-Z][a-z0-9]+(?:\s+[A-Z][a-z0-9]+)*)/g);
   if (capMatches) {
     capMatches.forEach(cm => {
-      if (cm.length > 3 && !['Survival', 'Thriller', 'Movie', 'Series', 'Show', 'Ending', 'Satisfying', 'Your', 'Curated'].includes(cm)) {
+      if (cm.length > 3 && !['Survival', 'Thriller', 'Movie', 'Series', 'Show', 'Ending', 'Satisfying', 'Your', 'Curated', ...platformWords].includes(cm)) {
         searchQueries.push(cm);
       }
     });
   }
 
-  if (searchQueries.length === 0) {
-    searchQueries.push('survival thriller', 'psychological thriller');
+  // If searchQueries is empty or platform preference was requested, supply top acclaimed platform seeds
+  if (searchQueries.length === 0 || filters.platform_preferences?.length) {
+    if (msg.includes('netflix') || filters.platform_preferences?.includes('Netflix')) {
+      searchQueries.push('Stranger Things', 'Dark', 'Squid Game', 'The Crown', 'Ozark', 'Mindhunter', 'Black Mirror', 'Wednesday', 'Breaking Bad', 'Normal People');
+    } else {
+      searchQueries.push('Inception', 'Dark', 'Squid Game', 'Stranger Things', 'Interstellar');
+    }
   }
 
   // Fetch OMDb, TMDB & TVMaze results in parallel
@@ -728,12 +781,18 @@ async function fetchLiveCandidatesForQuery(userMessage: string, filters: SearchF
   const rawList = [...omdbResults.flat(), ...tmdbResults.flat(), ...tvResults.flat()];
 
   rawList.forEach(m => {
-    // Exclude shorts, reality behind-the-scenes, or talking documentaries unless requested
-    const isDocSpinoff = m.genres.some(g => ['Documentary', 'Short', 'Game-Show', 'Talk'].includes(g)) || m.title.toLowerCase().includes('in conversation') || m.title.toLowerCase().includes('the challenge');
-    if (!isDocSpinoff && !candidates.some(c => c.title.toLowerCase() === m.title.toLowerCase())) {
+    // Exclude shorts, talk shows, afterparty recaps, or low-rated meta shows
+    const isMetaOrTalkShow = m.genres.some(g => ['Documentary', 'Short', 'Game-Show', 'Talk', 'Talk-Show'].includes(g)) ||
+                             m.title.toLowerCase().includes('afterparty') ||
+                             m.title.toLowerCase().includes('in conversation') ||
+                             m.title.toLowerCase().includes('behind the scenes') ||
+                             m.title.toLowerCase().includes('the challenge') ||
+                             (m.rating && m.rating < 5.5);
+    if (!isMetaOrTalkShow && !candidates.some(c => c.title.toLowerCase() === m.title.toLowerCase())) {
       candidates.push(m);
     }
   });
+
 
 
   // 4. Try Google Search Grounding if GEMINI_API_KEY is active
