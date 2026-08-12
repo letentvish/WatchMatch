@@ -214,25 +214,69 @@ export default function ProfileView({
             </div>
 
             {/* Persona Recommended Seeds */}
-            {persona.recommendedSeeds?.length > 0 && (
-              <div className="space-y-3 pt-2">
-                <span className="text-xs font-bold font-mono text-gray-400 uppercase tracking-wider block flex items-center space-x-2">
-                  <Compass className="w-4 h-4 text-red-500" />
-                  <span>Tailored Recommendation Seeds For Your Persona</span>
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {persona.recommendedSeeds.map(seed => (
-                    <span
-                      key={seed}
-                      className="bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/50 text-white font-semibold text-xs px-4 py-2 rounded-xl transition duration-200 cursor-pointer flex items-center space-x-2"
-                    >
-                      <Film className="w-3.5 h-3.5 text-red-400" />
-                      <span>{seed}</span>
-                    </span>
-                  ))}
+            {(() => {
+              const rawSeeds = persona.recommendedSeeds || [];
+              const unwatchedSeeds = rawSeeds.filter(seedTitle => {
+                const found = curatedMovies.find(m => m.title.toLowerCase() === seedTitle.toLowerCase() || m.id.toLowerCase() === seedTitle.toLowerCase());
+                if (!found) return true;
+                return !watchedIds.includes(found.id);
+              });
+
+              // Fallback unwatched seeds if user watched all default seeds
+              const fallbackSeeds = curatedMovies
+                .filter(m => !watchedIds.includes(m.id) && !unwatchedSeeds.some(s => s.toLowerCase() === m.title.toLowerCase()))
+                .slice(0, 5)
+                .map(m => m.title);
+
+              const displaySeeds = unwatchedSeeds.length > 0 ? unwatchedSeeds : fallbackSeeds;
+
+              if (displaySeeds.length === 0) return null;
+
+              return (
+                <div className="space-y-3 pt-2">
+                  <span className="text-xs font-bold font-mono text-gray-400 uppercase tracking-wider flex items-center space-x-2">
+                    <Compass className="w-4 h-4 text-red-500" />
+                    <span>Tailored Unwatched Seeds For Your Persona</span>
+                  </span>
+                  <div className="flex flex-wrap gap-2.5">
+                    {displaySeeds.map(seedTitle => {
+                      const matchedMovie = curatedMovies.find(m => m.title.toLowerCase() === seedTitle.toLowerCase() || m.id.toLowerCase() === seedTitle.toLowerCase()) || {
+                        id: `seed_${seedTitle.toLowerCase().replace(/\s+/g, '_')}`,
+                        title: seedTitle,
+                        year: 2022,
+                        contentType: 'movie' as const,
+                        rating: 8.5,
+                        voteCount: 150000,
+                        runtime: 125,
+                        genres: favoriteGenres.length ? favoriteGenres : ['Drama', 'Thriller'],
+                        moods: ['mind-bending', 'engaging'],
+                        pace: 'medium' as const,
+                        languages: ['English'],
+                        countries: ['United States'],
+                        synopsis: `Recommended cinephile title matching your AI Cinephile Persona archetype: ${persona.archetype}.`,
+                        posterUrl: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500&q=80',
+                        backdropUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1200&q=80',
+                        platforms: ['Netflix', 'Prime Video', 'Apple TV+']
+                      };
+
+                      return (
+                        <button
+                          key={seedTitle}
+                          type="button"
+                          onClick={() => onMovieClick(matchedMovie)}
+                          className="bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/50 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition duration-200 cursor-pointer flex items-center space-x-2 group shadow-md"
+                          title={`Click to view details for ${seedTitle}`}
+                        >
+                          <Film className="w-3.5 h-3.5 text-red-400 group-hover:scale-110 transition duration-200" />
+                          <span>{seedTitle}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
+
           </div>
         ) : (
           <div className="text-center py-8 bg-black/40 border border-dashed border-white/15 rounded-2xl space-y-4">
