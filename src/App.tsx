@@ -377,8 +377,10 @@ export default function App() {
                 onSelectMovie={(movie) => {
                   saveMoviesToDict([movie]);
                   setSelectedMovie(movie);
-                }} 
+                }}
+                tasteProfile={tasteProfile} 
               />
+
 
             )}
           </>
