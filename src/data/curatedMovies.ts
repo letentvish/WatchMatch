@@ -23,8 +23,9 @@ export const curatedMovies: Movie[] = [
     contentWarnings: ["Suicide", "Brief Violence"],
     platforms: ["Netflix"],
     synopsis: "A family saga with a supernatural twist, set in a German town where the disappearance of two young children exposes the relationships among four families.",
-    posterUrl: "https://image.tmdb.org/t/p/w500/apbrb68p7Adp669U706967v6Ur0.jpg",
+    posterUrl: "https://image.tmdb.org/t/p/w500/58Ki252R0iInG5z0I4pD6Z6bM0.jpg",
     backdropUrl: "https://image.tmdb.org/t/p/original/stXmXpP6f2Ior0F3U1C2mE0D71O.jpg",
+
     cast: ["Louis Hofmann", "Oliver Masucci", "Jördis Triebel"],
     moodScale: {
       darkness: 5,

@@ -13,21 +13,17 @@ export function getCleanImageUrl(url: string | undefined, type: 'poster' | 'back
       : 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1200&q=80&auto=format&fit=crop';
   }
 
-  // Detect Unsplash photo IDs mangled inside TMDB domain names
-  // Example: https://image.tmdb.org/t/p/original/1534447677768-be436bb09401.jpg
-  if (url.includes('image.tmdb.org/t/p/') && (url.includes('-') || url.match(/\d{6,}/))) {
+  // Detect explicit Unsplash photo IDs erroneously wrapped in a TMDB path (e.g. photo-153444...)
+  if (url.includes('image.tmdb.org/t/p/') && (url.includes('photo-') || url.includes('15344') || url.includes('15091') || url.includes('14895'))) {
     const filename = url.split('/').pop() || '';
     const cleanId = filename.replace(/\.(jpg|jpeg|png|webp)/i, '');
-    
-    // If it's a UUID/Unsplash format with hyphens or starts with a long timestamp/id
-    if (cleanId.includes('-') || cleanId.length > 10) {
-      const photoId = cleanId.startsWith('photo-') ? cleanId : `photo-${cleanId}`;
-      return `https://images.unsplash.com/${photoId}?q=80&w=${type === 'poster' ? 500 : 1200}&auto=format&fit=crop`;
-    }
+    const photoId = cleanId.startsWith('photo-') ? cleanId : `photo-${cleanId}`;
+    return `https://images.unsplash.com/${photoId}?q=80&w=${type === 'poster' ? 500 : 1200}&auto=format&fit=crop`;
   }
 
   return url;
 }
+
 
 /**
  * Common image onError handler that can be passed to img elements.
