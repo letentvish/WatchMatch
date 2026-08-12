@@ -31,6 +31,8 @@ export default function ProfileView({
 }: ProfileViewProps) {
   const [statusFilter, setStatusFilter] = useState<'all' | 'unwatched' | 'watched'>('all');
   const [isGeneratingPersona, setIsGeneratingPersona] = useState(false);
+  const [seedOffset, setSeedOffset] = useState<number>(0);
+
 
   // Helper to resolve movie by ID from saved dictionary or curated list
   const getMovieById = (id: string): Movie | undefined => {
@@ -216,28 +218,49 @@ export default function ProfileView({
             {/* Persona Recommended Seeds */}
             {(() => {
               const rawSeeds = persona.recommendedSeeds || [];
-              const unwatchedSeeds = rawSeeds.filter(seedTitle => {
-                const found = curatedMovies.find(m => m.title.toLowerCase() === seedTitle.toLowerCase() || m.id.toLowerCase() === seedTitle.toLowerCase());
-                if (!found) return true;
-                return !watchedIds.includes(found.id);
-              });
+              
+              // Unwatched curated movies pool matching favorite genres or high ratings
+              const unwatchedCuratedPool = curatedMovies.filter(m => !watchedIds.includes(m.id));
 
-              // Fallback unwatched seeds if user watched all default seeds
-              const fallbackSeeds = curatedMovies
-                .filter(m => !watchedIds.includes(m.id) && !unwatchedSeeds.some(s => s.toLowerCase() === m.title.toLowerCase()))
-                .slice(0, 5)
-                .map(m => m.title);
+              // All possible seed candidates
+              const allSeedTitles = [
+                ...rawSeeds.filter(seedTitle => {
+                  const found = curatedMovies.find(m => m.title.toLowerCase() === seedTitle.toLowerCase() || m.id.toLowerCase() === seedTitle.toLowerCase());
+                  return !found || !watchedIds.includes(found.id);
+                }),
+                ...unwatchedCuratedPool.map(m => m.title)
+              ];
 
-              const displaySeeds = unwatchedSeeds.length > 0 ? unwatchedSeeds : fallbackSeeds;
+              // Remove duplicates
+              const uniqueSeedTitles = Array.from(new Set(allSeedTitles));
+              if (uniqueSeedTitles.length === 0) return null;
 
-              if (displaySeeds.length === 0) return null;
+              // Slice 5 seeds based on seedOffset
+              const slicedIndex = seedOffset % Math.max(1, uniqueSeedTitles.length);
+              const displaySeeds = uniqueSeedTitles
+                .slice(slicedIndex, slicedIndex + 5)
+                .concat(uniqueSeedTitles.slice(0, Math.max(0, 5 - (uniqueSeedTitles.length - slicedIndex))))
+                .slice(0, 5);
 
               return (
                 <div className="space-y-3 pt-2">
-                  <span className="text-xs font-bold font-mono text-gray-400 uppercase tracking-wider flex items-center space-x-2">
-                    <Compass className="w-4 h-4 text-red-500" />
-                    <span>Tailored Unwatched Seeds For Your Persona</span>
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold font-mono text-gray-400 uppercase tracking-wider flex items-center space-x-2">
+                      <Compass className="w-4 h-4 text-red-500" />
+                      <span>Tailored Unwatched Seeds For Your Persona</span>
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => setSeedOffset(prev => prev + 5)}
+                      className="flex items-center space-x-1.5 text-xs text-red-400 hover:text-white glass-card border border-white/10 hover:border-red-500/40 px-3 py-1.5 rounded-xl font-mono font-bold transition duration-200 cursor-pointer shadow"
+                      title="Generate new recommendation seeds"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Refresh Seeds</span>
+                    </button>
+                  </div>
+
                   <div className="flex flex-wrap gap-2.5">
                     {displaySeeds.map(seedTitle => {
                       const matchedMovie = curatedMovies.find(m => m.title.toLowerCase() === seedTitle.toLowerCase() || m.id.toLowerCase() === seedTitle.toLowerCase()) || {
