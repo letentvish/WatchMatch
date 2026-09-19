@@ -109,14 +109,20 @@ export default function AISettingsModal({ onClose }: Props) {
   }, [settings.mode, settings.provider, settings.apiKey, settings.baseUrl]);
 
   const loadModels = async () => {
-    setModelsState({ loading: true });
+    setModelsState({ loading: true, error: undefined });
     try {
       const res = await fetch('/api/llm/models', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ llm: llmPayload({ ...settings, model: '', freeModel: '' }) }),
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data: any = {};
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error(res.ok ? 'Invalid response from server' : `Server returned error (${res.status}). Check Vercel logs or API keys.`);
+      }
       if (!res.ok) throw new Error(data.error || 'Could not load models');
       setModels(data.models || []);
       setModelsState({ loading: false });
@@ -133,7 +139,13 @@ export default function AISettingsModal({ onClose }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ llm: llmPayload(settings) }),
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data: any = {};
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error(res.ok ? 'Invalid response from server' : `Server returned error (${res.status}). Check Vercel logs or API keys.`);
+      }
       if (!res.ok || !data.ok) throw new Error(data.error || 'Connection failed');
       setTest({ status: 'ok', ms: data.ms, reply: data.reply, semantic: data.semantic });
     } catch (err: any) {

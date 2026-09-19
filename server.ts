@@ -2,7 +2,6 @@ import express from 'express';
 import path from 'path';
 import dotenv from 'dotenv';
 import { GoogleGenAI, Type } from '@google/genai';
-import { createServer as createViteServer } from 'vite';
 import { curatedMovies } from './src/data/curatedMovies.js'; // Import our curated list
 import { SearchFilters, Movie, RecommendationResponse } from './src/types.js';
 import {
@@ -24,6 +23,9 @@ import {
 dotenv.config();
 
 const app = express();
+// Behind Vercel's (or any) proxy: use the real visitor IP from X-Forwarded-For, otherwise every
+// visitor shares one IP and the free-AI hourly limit would run out for everyone at once.
+app.set('trust proxy', true);
 app.use(express.json({ limit: '1mb' }));
 
 const PORT = Number(process.env.PORT) || 3000;
@@ -1950,9 +1952,23 @@ app.post('/api/discover', async (req, res) => {
   }
 });
 
+// Unknown /api routes and crashes must still answer JSON: the frontend parses every /api response,
+// and an HTML/plain-text error page shows up as "Unexpected token ... is not valid JSON".
+app.use('/api', (_req, res) => {
+  res.status(404).json({ error: 'Unknown API route' });
+});
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('[Unhandled]', req.method, req.path, err);
+  if (res.headersSent) return next(err);
+  res.status(err?.status || 500).json({ error: err?.expose ? err.message : 'Server error' });
+});
+
 // Setup Vite Dev server or Serve Static production build
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
+    // Imported lazily: Vite is a dev tool with native binaries and must never load inside the
+    // Vercel function (api/index.ts imports this file with VERCEL set, so startServer never runs there).
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
