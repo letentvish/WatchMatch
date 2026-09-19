@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Play, Plus, Check, CheckCircle2, Trash, AlertTriangle, EyeOff, Film, HelpCircle, Flame, Star, Hourglass } from 'lucide-react';
+import { Sparkles, Play, Plus, Check, CheckCircle2, Trash, AlertTriangle, EyeOff, Film, HelpCircle, Flame, Star, Hourglass, Loader2 } from 'lucide-react';
 import { RecommendationResponse, Movie } from '../types';
 import { curatedMovies } from '../data/curatedMovies';
 import { getCleanImageUrl, handleImageLoadError } from '../utils/imageHelper';
@@ -13,6 +13,8 @@ interface ResultsViewProps {
   watchedIds?: string[];
   onToggleWatched?: (movieId: string) => void;
   onRefine: (refinementText: string) => void;
+  isLoading?: boolean;
+  pendingQuery?: string | null;
 }
 
 // Helper to format raw content types into human-readable labels
@@ -37,6 +39,8 @@ export default function ResultsView({
   watchedIds = [],
   onToggleWatched,
   onRefine,
+  isLoading = false,
+  pendingQuery = null,
 }: ResultsViewProps) {
   // Helper to find full movie details from curated list, or return a basic structure if custom TMDB result
   const getMovieDetails = (titleId: string): Movie | null => {
@@ -131,6 +135,17 @@ export default function ResultsView({
 
   return (
     <div className="max-w-[1550px] mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-8">
+      {/* In-progress refinement: visible status, and the current results are dimmed until the new ones arrive */}
+      {isLoading && (
+        <div role="status" aria-live="polite" className="sticky top-20 z-40 flex items-center gap-3 bg-wm-card/95 border border-red-500/40 rounded-2xl px-5 py-3 shadow-2xl backdrop-blur">
+          <Loader2 className="w-5 h-5 text-red-500 animate-spin flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-white truncate">Refining{pendingQuery ? `: “${pendingQuery}”` : '…'}</p>
+            <p className="text-xs text-gray-400">Searching TMDB and ranking new matches. This can take up to 20 seconds on the free AI.</p>
+          </div>
+        </div>
+      )}
+      <div className={`space-y-8 transition-opacity ${isLoading ? 'opacity-40 pointer-events-none select-none' : ''}`} aria-busy={isLoading}>
       {/* Header matching exact screen */}
       <div className="space-y-1">
         <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight font-heading">
@@ -471,6 +486,7 @@ export default function ResultsView({
                 id={`refinement-btn-${idx}`}
                 key={idx}
                 onClick={() => onRefine(s)}
+                disabled={isLoading}
                 className="glass-card text-gray-300 hover:text-white border border-white/15 hover:border-red-500/50 hover:bg-red-500/10 px-5 py-3 rounded-2xl text-xs md:text-sm font-semibold transition cursor-pointer text-left leading-relaxed flex items-center space-x-2 shadow-lg"
               >
                 <span className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></span>
@@ -577,6 +593,7 @@ export default function ResultsView({
                 <button
                   key={idx}
                   onClick={() => onRefine(refinement)}
+                  disabled={isLoading}
                   className="bg-white/5 hover:bg-red-950/40 border border-white/10 hover:border-red-500/50 py-2.5 px-3 rounded-xl text-xs text-gray-300 hover:text-white font-semibold transition duration-200 cursor-pointer text-center truncate shadow-sm"
                 >
                   {refinement}
@@ -607,6 +624,7 @@ export default function ResultsView({
         </div> {/* END RIGHT 4 COLUMNS */}
 
       </div> {/* END 2-COLUMN GRID STAGE */}
+      </div>
     </div>
   );
 }

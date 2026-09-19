@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Navbar from './components/Navbar';
 import HomeView from './components/HomeView';
 import FilterBuilder from './components/FilterBuilder';
@@ -10,6 +10,7 @@ import { Sparkles, ArrowLeft, RefreshCw, Bookmark, Heart, Sliders, CheckCircle2 
 import { curatedMovies } from './data/curatedMovies';
 import { getCleanImageUrl, handleImageLoadError } from './utils/imageHelper';
 import { hydrateCuratedArt } from './utils/curatedArt';
+import { refreshArt } from './utils/posters';
 import { loadLlmSettings, llmPayload, describeSettings } from './utils/llmSettings';
 import AISettingsModal from './components/AISettingsModal';
 
@@ -67,6 +68,15 @@ export default function App() {
     });
   }, []);
 
+  // Movies saved before posters came from TMDB (watchlist, history, likes) still carry stock
+  // photos in localStorage; swap in their real artwork once.
+  useEffect(() => {
+    refreshArt(Object.values(tasteProfile.savedMoviesDict || {})).then(updated => {
+      if (updated.length) saveMoviesToDict(updated);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Sync taste profile changes to local storage
   useEffect(() => {
     localStorage.setItem('watchmatch_taste_profile', JSON.stringify(tasteProfile));
@@ -110,16 +120,42 @@ export default function App() {
     };
   };
 
+  // Only the latest search may update the screen: starting a new one cancels the previous request,
+  // and a late response from an older one is ignored (otherwise results flip back and forth).
+  const requestSeq = useRef(0);
+  const inflight = useRef<AbortController | null>(null);
+  const [pendingQuery, setPendingQuery] = useState<string | null>(null);
+  const beginRequest = (label: string) => {
+    inflight.current?.abort();
+    const controller = new AbortController();
+    inflight.current = controller;
+    const seq = ++requestSeq.current;
+    setIsLoading(true);
+    setPendingQuery(label);
+    return {
+      signal: controller.signal,
+      isCurrent: () => seq === requestSeq.current,
+      finish: () => {
+        if (seq !== requestSeq.current) return;
+        inflight.current = null;
+        setIsLoading(false);
+        setPendingQuery(null);
+      },
+    };
+  };
+
   // Conversational Search submitting handler. Refinements ("only movies", "shorter") build on the
   // current filters; fresh searches start clean so old country/genre locks don't leak in.
   const handleSearchSubmit = async (queryText: string, isRefinement = false) => {
     const previousFilters = isRefinement ? activeFilters : null;
-    setIsLoading(true);
+    const request = beginRequest(queryText);
     setErrorMsg(null);
-    setActiveFilters(null);
+    // Fresh searches drop the old filters right away; refinements keep them until the new ones arrive.
+    if (!isRefinement) setActiveFilters(null);
 
     try {
       const response = await fetch('/api/discover', {
+        signal: request.signal,
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -136,6 +172,7 @@ export default function App() {
       }
 
       const data = await response.json();
+      if (!request.isCurrent()) return; // a newer search started; don't let this one overwrite it
 
       if (data.error) {
         throw new Error(data.error);
@@ -160,21 +197,23 @@ export default function App() {
         setCurrentView('discover'); // Ensure we view the matches
       }
     } catch (err: any) {
+      if (!request.isCurrent() || err?.name === 'AbortError') return;
       console.error(err);
       setErrorMsg(err.message || 'Failed to analyze request. Check connection.');
     } finally {
-      setIsLoading(false);
+      request.finish();
     }
   };
 
   // Structured Filter panel applying handler
   const handleApplyFilters = async (filters: SearchFilters) => {
-    setIsLoading(true);
+    const request = beginRequest('your filters');
     setErrorMsg(null);
     setActiveFilters(filters);
 
     try {
       const response = await fetch('/api/rank-candidates', {
+        signal: request.signal,
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -190,6 +229,7 @@ export default function App() {
       }
 
       const data = await response.json();
+      if (!request.isCurrent()) return;
 
       if (data.movieDetails) {
         saveMoviesToDict(Object.values(data.movieDetails));
@@ -198,10 +238,11 @@ export default function App() {
       setActiveRecommendations(data);
       setCurrentView('discover'); // Swivel back to results view on Discover tab
     } catch (err: any) {
+      if (!request.isCurrent() || err?.name === 'AbortError') return;
       console.error(err);
       setErrorMsg(err.message || 'Failed to fetch recommendations with filters.');
     } finally {
-      setIsLoading(false);
+      request.finish();
     }
   };
 
@@ -389,6 +430,7 @@ export default function App() {
                   <button
                     id="btn-back-scout"
                     onClick={() => {
+                      beginRequest('').finish(); // cancels any in-flight search
                       setActiveRecommendations(null);
                       setActiveFilters(null);
                     }}
@@ -414,6 +456,8 @@ export default function App() {
                   watchedIds={tasteProfile.watched || []}
                   onToggleWatched={handleToggleWatched}
                   onRefine={handleRefine}
+                  isLoading={isLoading}
+                  pendingQuery={pendingQuery}
                 />
               </div>
             ) : (

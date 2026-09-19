@@ -3,6 +3,16 @@ import { User, Heart, Trash2, Sliders, Flame, Trash, Bookmark, RefreshCw, Star, 
 import { TasteProfile, Movie, CinephilePersona } from '../types';
 import { curatedMovies } from '../data/curatedMovies';
 import { getCleanImageUrl, handleImageLoadError } from '../utils/imageHelper';
+import { usePosters } from '../utils/posters';
+
+const PROFILE_SEEDS = [
+  { title: 'Memento', year: 2000, rating: 8.4 },
+  { title: 'Blade Runner 2049', year: 2017, rating: 8.0 },
+  { title: 'Drive', year: 2011, rating: 7.8 },
+  { title: 'Prisoners', year: 2013, rating: 8.2 },
+  { title: 'Arrival', year: 2016, rating: 7.9 },
+  { title: 'Oldboy', year: 2003, rating: 8.3 },
+];
 
 interface ProfileViewProps {
   tasteProfile: TasteProfile;
@@ -32,6 +42,7 @@ export default function ProfileView({
   const [statusFilter, setStatusFilter] = useState<'all' | 'unwatched' | 'watched'>('all');
   const [isGeneratingPersona, setIsGeneratingPersona] = useState(false);
   const [seedOffset, setSeedOffset] = useState<number>(0);
+  const seedPoster = usePosters(PROFILE_SEEDS.map(s => ({ title: s.title, year: s.year })));
 
 
   // Helper to resolve movie by ID from saved dictionary or curated list
@@ -253,16 +264,9 @@ export default function ProfileView({
 
         {/* Carousel Row */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-          {[
-            { title: "Memento", year: 2000, rating: 8.4, img: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&q=80" },
-            { title: "Blade Runner 2049", year: 2017, rating: 8.0, img: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=300&q=80" },
-            { title: "Drive", year: 2011, rating: 7.8, img: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=300&q=80" },
-            { title: "Prisoners", year: 2013, rating: 8.2, img: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=300&q=80" },
-            { title: "Arrival", year: 2016, rating: 7.9, img: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=300&q=80" },
-            { title: "Oldboy", year: 2003, rating: 8.3, img: "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=300&q=80" },
-          ].map((seed, idx) => {
-            const actualMovie = curatedMovies.find(m => m.title.toLowerCase().includes(seed.title.toLowerCase()));
-            const posterSrc = actualMovie?.posterUrl ? getCleanImageUrl(actualMovie.posterUrl, 'poster') : seed.img;
+          {PROFILE_SEEDS.map((seed, idx) => {
+            const actualMovie = curatedMovies.find(m => m.title.toLowerCase() === seed.title.toLowerCase());
+            const posterSrc = getCleanImageUrl(seedPoster({ title: seed.title, year: seed.year })?.posterUrl || actualMovie?.posterUrl, 'poster');
 
             return (
               <div 

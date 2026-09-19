@@ -481,19 +481,45 @@ export async function searchTitles(query: string, pages = 1): Promise<Movie[]> {
 }
 
 // Find the TMDB entry for a title we got from somewhere else (curated list, OMDb, TVMaze).
+const normTitle = (t: string) => t.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
+
+// Find the TMDB entry for a title we got from somewhere else (curated list, collections, OMDb, TVMaze,
+// saved movies). Searches films AND series and scores the candidates, because the first search hit
+// is often wrong: "Dark" → The Dark Knight, "Chernobyl" → Chernobyl Diaries, "Severance" → a 2006 film.
 export async function findTitle(title: string, year?: number, contentType?: ContentType): Promise<{ media: MediaType; id: number; posterUrl: string; backdropUrl: string } | null> {
-  const preferTv = contentType && contentType !== 'movie';
-  const order: MediaType[] = preferTv ? ['tv', 'movie'] : ['movie', 'tv'];
-  for (const media of order) {
+  // "True Detective (Season 1)" → "True Detective"
+  title = title.replace(/\s*[(\[](?:season|series|part|vol\.?|volume)\s*[\w ]*[)\]]\s*$/i, '').trim() || title;
+  const wanted = normTitle(title);
+
+  const search = async (media: MediaType) => {
     const yearParam = year ? (media === 'movie' ? { year } : { first_air_date_year: year }) : {};
     let data = await tmdb<any>(`/search/${media}`, { query: title, include_adult: false, ...yearParam });
     if (year && !data?.results?.length) data = await tmdb<any>(`/search/${media}`, { query: title, include_adult: false });
-    const hit = data?.results?.[0];
-    if (hit) {
-      return { media, id: hit.id, posterUrl: posterUrl(hit.poster_path), backdropUrl: posterUrl(hit.backdrop_path, 'w1280') };
-    }
+    return (data?.results || []).slice(0, 10).map((r: any) => ({ media, r }));
+  };
+  const candidates = (await Promise.all([search('movie'), search('tv')])).flat();
+
+  let best: { media: MediaType; r: any; score: number } | null = null;
+  for (const { media, r } of candidates) {
+    if (!r.poster_path) continue;
+    const names = [r.title, r.name, r.original_title, r.original_name].filter(Boolean).map(normTitle);
+    const date = media === 'movie' ? r.release_date : r.first_air_date;
+    const y = date ? Number(String(date).slice(0, 4)) : 0;
+    let score = 0;
+    if (names.includes(wanted)) score += 1000;                                   // exact title
+    else if (names.some(n => n.startsWith(wanted) || wanted.startsWith(n))) score += 150;
+    if (year && y) score += y === year ? 400 : Math.abs(y - year) <= 1 ? 250 : -Math.min(300, Math.abs(y - year) * 20);
+    if (contentType) score += (contentType === 'movie') === (media === 'movie') ? 120 : -120;
+    score += Math.log10((r.vote_count || 0) + 1) * 60;                           // better-known wins ties
+    if (!best || score > best.score) best = { media, r, score };
   }
-  return null;
+  if (!best) return null;
+  return {
+    media: best.media,
+    id: best.r.id,
+    posterUrl: posterUrl(best.r.poster_path),
+    backdropUrl: posterUrl(best.r.backdrop_path, 'w1280'),
+  };
 }
 
 async function recommendationsFor(title: string): Promise<Movie[]> {

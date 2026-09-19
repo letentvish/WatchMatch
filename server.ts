@@ -1183,6 +1183,23 @@ app.get('/api/curated-art', async (_req, res) => {
   res.json({ art });
 });
 
+// Endpoint: official TMDB artwork for arbitrary titles (home collections, profile seeds, and
+// refreshing movies saved in the browser before posters came from TMDB).
+// Body: { items: [{ title, year?, contentType? }] } → { art: { "<title>|<year>": { posterUrl, backdropUrl } } }
+app.post('/api/posters', async (req, res) => {
+  const items: any[] = Array.isArray(req.body?.items) ? req.body.items.slice(0, 40) : [];
+  if (!isTmdbConfigured() || !items.length) return res.json({ art: {} });
+  const art: Record<string, { posterUrl: string; backdropUrl: string }> = {};
+  await Promise.all(items.map(async it => {
+    const title = typeof it?.title === 'string' ? it.title.trim().slice(0, 200) : '';
+    if (!title) return;
+    const year = Number(it.year) || undefined;
+    const match = await findTitle(title, year, it.contentType);
+    if (match?.posterUrl) art[`${title}|${year || ''}`] = { posterUrl: match.posterUrl, backdropUrl: match.backdropUrl || match.posterUrl };
+  }));
+  res.json({ art });
+});
+
 // Endpoint: Generate AI Cinephile Taste Persona
 app.post('/api/generate-persona', async (req, res) => {
   const { taste_profile } = req.body;

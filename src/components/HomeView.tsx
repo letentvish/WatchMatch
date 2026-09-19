@@ -3,6 +3,7 @@ import { Search, Sparkles, Flame, Clock, Compass, Film, RefreshCw } from 'lucide
 import { curatedMovies } from '../data/curatedMovies';
 import { Movie, TasteProfile } from '../types';
 import { getCleanImageUrl, handleImageLoadError } from '../utils/imageHelper';
+import { usePosters } from '../utils/posters';
 
 interface HomeViewProps {
   onSearchSubmit: (text: string) => void;
@@ -59,6 +60,7 @@ export default function HomeView({ onSearchSubmit, isLoading, onSelectMovie, tas
       prompt: "An atmospheric psychological mystery or thriller with tension and high ratings.",
       icon: Compass,
       movieTitles: ["Dark", "Severance", "Chernobyl", "Shutter Island"],
+      movieYears: [2017, 2022, 2019, 2010],
       gradient: "from-indigo-950 to-neutral-900",
     },
     {
@@ -67,6 +69,7 @@ export default function HomeView({ onSearchSubmit, isLoading, onSelectMovie, tas
       prompt: "A deeply moving and bittersweet emotional drama with phenomenal performances.",
       icon: Flame,
       movieTitles: ["Past Lives", "Manchester by the Sea", "Aftersun", "The Whale"],
+      movieYears: [2023, 2016, 2022, 2022],
       gradient: "from-rose-950 to-neutral-900",
     },
     {
@@ -75,6 +78,7 @@ export default function HomeView({ onSearchSubmit, isLoading, onSelectMovie, tas
       prompt: "Under-the-radar masterpieces and mind-bending hidden gems with high critical acclaim.",
       icon: Sparkles,
       movieTitles: ["Tumbbad", "Silo", "Mr. Robot", "Coherence"],
+      movieYears: [2018, 2023, 2015, 2013],
       gradient: "from-blue-950 to-neutral-900",
     },
     {
@@ -83,6 +87,7 @@ export default function HomeView({ onSearchSubmit, isLoading, onSelectMovie, tas
       prompt: "A critically acclaimed crime noir or neo-noir mystery with dark aesthetics.",
       icon: Film,
       movieTitles: ["Drive", "Memories of Murder", "Prisoners", "Chinatown"],
+      movieYears: [2011, 2003, 2013, 1974],
       gradient: "from-neutral-950 to-stone-900",
     },
   ];
@@ -94,11 +99,12 @@ export default function HomeView({ onSearchSubmit, isLoading, onSelectMovie, tas
     }
   };
 
-  // Helper to find movie image by title or curated match
+  // Real TMDB posters for the collection thumbnails (most titles aren't in the curated list).
+  const yearOf = new Map(curatedCollections.flatMap(c => c.movieTitles.map((t, i) => [t, c.movieYears[i]] as const)));
+  const posterFor = usePosters([...yearOf].map(([title, year]) => ({ title, year })));
   const getThumbnailByTitle = (title: string): string => {
-    const found = curatedMovies.find(m => m.title.toLowerCase().includes(title.toLowerCase()));
-    if (found?.posterUrl) return getCleanImageUrl(found.posterUrl, 'poster');
-    return 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&q=80';
+    const exact = curatedMovies.find(m => m.title.toLowerCase() === title.toLowerCase());
+    return getCleanImageUrl(posterFor({ title, year: yearOf.get(title) })?.posterUrl || exact?.posterUrl, 'poster');
   };
 
   // Sample featured cards for floating hero sides
