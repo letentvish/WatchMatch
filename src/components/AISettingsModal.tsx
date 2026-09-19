@@ -21,6 +21,54 @@ interface Props {
   onClose: () => void;
 }
 
+const FALLBACK_PROVIDERS: ProviderOption[] = [
+  {
+    id: 'nvidia',
+    label: 'NVIDIA NIM',
+    defaultModel: 'nvidia/nemotron-3-super-120b-a12b',
+    keyUrl: 'https://build.nvidia.com/settings/api-keys',
+    keyHint: 'nvapi-…',
+    needsBaseUrl: false,
+    semantic: true,
+  },
+  {
+    id: 'openai',
+    label: 'OpenAI (ChatGPT)',
+    defaultModel: 'gpt-4o',
+    keyUrl: 'https://platform.openai.com/api-keys',
+    keyHint: 'sk-…',
+    needsBaseUrl: false,
+    semantic: true,
+  },
+  {
+    id: 'gemini',
+    label: 'Google Gemini',
+    defaultModel: 'gemini-2.5-flash',
+    keyUrl: 'https://aistudio.google.com/apikey',
+    keyHint: 'AIza…',
+    needsBaseUrl: false,
+    semantic: true,
+  },
+  {
+    id: 'anthropic',
+    label: 'Anthropic (Claude)',
+    defaultModel: 'claude-3-5-sonnet-20241022',
+    keyUrl: 'https://console.anthropic.com/settings/keys',
+    keyHint: 'sk-ant-…',
+    needsBaseUrl: false,
+    semantic: false,
+  },
+  {
+    id: 'openai_compatible',
+    label: 'Other (OpenAI-compatible)',
+    defaultModel: '',
+    keyUrl: '',
+    keyHint: 'API key',
+    needsBaseUrl: true,
+    semantic: false,
+  },
+];
+
 type TestState = { status: 'idle' } | { status: 'running' } | { status: 'ok'; ms: number; reply: string; semantic: boolean } | { status: 'error'; message: string };
 
 export default function AISettingsModal({ onClose }: Props) {
@@ -30,7 +78,8 @@ export default function AISettingsModal({ onClose }: Props) {
   const [modelsState, setModelsState] = useState<{ loading: boolean; error?: string }>({ loading: false });
   const [test, setTest] = useState<TestState>({ status: 'idle' });
 
-  const provider = config?.providers.find(p => p.id === settings.provider);
+  const availableProviders = (config?.providers && config.providers.length > 0) ? config.providers : FALLBACK_PROVIDERS;
+  const provider = availableProviders.find(p => p.id === settings.provider) || availableProviders[0];
   const update = (patch: Partial<LlmSettings>) => {
     setSettings(prev => ({ ...prev, ...patch }));
     setTest({ status: 'idle' });
@@ -38,9 +87,12 @@ export default function AISettingsModal({ onClose }: Props) {
 
   useEffect(() => {
     fetch('/api/llm/config')
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
       .then(setConfig)
-      .catch(() => setConfig({ free: { available: false }, providers: [] }));
+      .catch(() => setConfig({ free: { available: false }, providers: FALLBACK_PROVIDERS }));
   }, []);
 
   // Close on Escape
@@ -119,10 +171,10 @@ export default function AISettingsModal({ onClose }: Props) {
           <select
             value={value}
             onChange={e => onChange(e.target.value)}
-            className="flex-1 min-w-0 bg-black/60 border border-white/10 text-white text-xs rounded-lg px-3 py-2.5"
+            className="flex-1 min-w-0 bg-[#18181b] border border-white/20 text-white text-xs rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-red-500/50 cursor-pointer"
           >
-            <option value="">{placeholder}</option>
-            {models.map(m => <option key={m} value={m}>{m}</option>)}
+            <option value="" className="bg-[#18181b] text-gray-400">{placeholder}</option>
+            {models.map(m => <option key={m} value={m} className="bg-[#18181b] text-white py-1">{m}</option>)}
           </select>
         ) : (
           <input
@@ -191,9 +243,13 @@ export default function AISettingsModal({ onClose }: Props) {
                 id="ai-provider"
                 value={settings.provider}
                 onChange={e => update({ provider: e.target.value as ProviderId, model: '' })}
-                className="w-full bg-black/60 border border-white/10 text-white text-sm rounded-lg px-3 py-2.5"
+                className="w-full bg-[#18181b] border border-white/20 text-white text-sm rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-red-500/50 cursor-pointer"
               >
-                {(config?.providers || []).map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                {availableProviders.map(p => (
+                  <option key={p.id} value={p.id} className="bg-[#18181b] text-white py-1.5">
+                    {p.label}
+                  </option>
+                ))}
               </select>
             </div>
 
