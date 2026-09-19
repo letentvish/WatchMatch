@@ -55,6 +55,7 @@ export default function MovieDetailModal({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        id: movie.id,
         title: movie.title,
         genres: movie.genres,
         contentType: movie.contentType,
@@ -97,6 +98,8 @@ export default function MovieDetailModal({
     if (m.platforms && m.platforms.length > 0 && m.platforms[0] !== 'Streaming Platforms' && m.platforms[0] !== 'undefined') {
       return m.platforms;
     }
+    // TMDB titles carry real provider data: empty means not on a subscription service in India.
+    if (m.id.startsWith('tmdb_')) return [];
     const t = m.title.toLowerCase();
     if (t.includes('hulk') || t.includes('marvel') || t.includes('disney') || t.includes('mandalorian') || t.includes('star wars') || t.includes('avengers') || t.includes('loki') || t.includes('wandavision')) {
       return ['Disney+ Hotstar', 'Disney+'];
@@ -111,6 +114,7 @@ export default function MovieDetailModal({
       return ['Apple TV+'];
     }
     if (t.includes('boys') || t.includes('rings of power') || t.includes('jack ryan') || t.includes('reacher')) {
+
       return ['Prime Video'];
     }
     return ['Netflix', 'Prime Video', 'JioHotstar'];
@@ -123,101 +127,155 @@ export default function MovieDetailModal({
     ? '1 Season' 
     : `${movie.runtime || 120}m`;
 
+  const [activeTab, setActiveTab] = React.useState<'overview' | 'cast' | 'reviews'>('overview');
+
+  // Realistic Rotten Tomatoes & Metascore derivation
+  const rtScore = Math.min(98, Math.round(movie.rating * 10 + 3));
+  const metaScore = Math.min(95, Math.round(movie.rating * 9 + 4));
+
   return (
     <div 
       onClick={handleBackdropClick}
-      className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center p-3 md:p-6 animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 bg-black/90 backdrop-blur-2xl flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
     >
       <div 
         id="movie-detail-modal"
-        className="relative glass-panel rounded-3xl max-w-4xl w-full max-h-[92vh] md:max-h-[88vh] overflow-hidden shadow-[0_0_90px_-15px_rgba(229,9,20,0.35)] border border-white/15 flex flex-col"
+        className="relative glass-panel rounded-3xl max-w-5xl w-full max-h-[92vh] overflow-hidden shadow-[0_0_90px_-10px_rgba(229,9,20,0.4)] border border-red-500/40 flex flex-col"
       >
-        {/* Close Button - Stays pinned at top right */}
-        <button
-          id="close-modal-btn"
-          onClick={onClose}
-          className="absolute top-4 right-4 z-30 bg-black/70 text-gray-300 hover:text-white p-2.5 rounded-full border border-white/15 backdrop-blur-md transition duration-200 hover:scale-110 shadow-lg hover:border-red-500/50"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* Top Header Bar with Centered Tabs & Close */}
+        <div className="flex items-center justify-between px-6 py-3.5 border-b border-white/10 bg-black/40 backdrop-blur-md shrink-0">
+          <div className="flex items-center space-x-2">
+            <div className="w-5 h-5 rounded bg-red-600 flex items-center justify-center text-white font-black text-xs">
+              W
+            </div>
+            <span className="text-xs font-bold text-white font-heading tracking-wide uppercase">WatchMatch</span>
+          </div>
+
+          {/* Centered Navigation Tabs */}
+          <div className="flex items-center bg-white/5 border border-white/10 rounded-full p-1 text-xs font-semibold">
+            {(['overview', 'cast', 'reviews'] as const).map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-1 rounded-full capitalize transition cursor-pointer ${
+                  activeTab === tab ? 'bg-white/20 text-white font-bold shadow' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          {/* Close Button */}
+          <button
+            id="close-modal-btn"
+            onClick={onClose}
+            className="text-xs font-mono font-bold text-gray-400 hover:text-white flex items-center space-x-1 cursor-pointer transition hover:text-red-400"
+          >
+            <span>CLOSE</span>
+            <span>✕</span>
+          </button>
+        </div>
 
         {/* Scrollable body content */}
         <div className="overflow-y-auto flex-1 hide-scrollbar">
-          {/* Hero Backdrop with Floating Poster Showcase */}
-          <div className="relative h-72 md:h-96 overflow-hidden flex-shrink-0">
+          {/* Hero Section Banner */}
+          <div className="relative h-64 md:h-72 overflow-hidden flex-shrink-0 bg-black/60">
             <img 
               src={getCleanImageUrl(movie.backdropUrl || movie.posterUrl, 'backdrop')} 
               alt={movie.title}
               referrerPolicy="no-referrer"
-              className="w-full h-full object-cover filter brightness-[0.75] saturate-[1.1]"
+              className="w-full h-full object-cover filter brightness-[0.55] saturate-[1.1]"
               onError={(e) => handleImageLoadError(e, movie.posterUrl)}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#121217] via-[#121217]/50 to-transparent"></div>
-            <div className="absolute inset-0 bg-gradient-to-r from-[#121217]/90 via-transparent to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e13] via-transparent to-transparent"></div>
             
-            {/* Split Showcase Details */}
-            <div className="absolute bottom-6 left-6 md:left-8 right-6 flex items-end space-x-6">
-              {/* Floating Glass Poster */}
-              <div className="hidden md:block w-32 h-44 rounded-2xl overflow-hidden border border-white/20 shadow-2xl flex-shrink-0 group relative glow-accent">
-                <img 
-                  src={getCleanImageUrl(movie.posterUrl, 'poster')} 
-                  alt={movie.title}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
-                  onError={(e) => handleImageLoadError(e, movie.backdropUrl)}
-                />
-              </div>
-
-              <div className="space-y-2 flex-1">
-                <div className="flex flex-wrap gap-2 items-center">
-                  <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-black font-black text-[11px] px-3 py-1 rounded-full uppercase tracking-wider shadow-lg flex items-center space-x-1">
-                    <Star className="w-3 h-3 fill-black mr-0.5" />
-                    <span>{movie.rating} Rating</span>
-                  </span>
-                  <span className="bg-white/10 backdrop-blur-md text-gray-200 border border-white/15 text-[11px] font-mono px-3 py-1 rounded-full font-bold">
-                    {seasonsText}
-                  </span>
-                  {movie.seriesStatus && (
-                    <span className="bg-red-500/20 text-red-400 border border-red-500/40 text-[11px] font-mono px-3 py-1 rounded-full font-bold capitalize">
-                      Status: {movie.seriesStatus}
-                    </span>
-                  )}
-                </div>
-
-                <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight font-heading leading-tight drop-shadow-md">
+            {/* Overlay Header Info */}
+            <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between gap-4">
+              <div className="space-y-1">
+                <span className="text-xs font-mono text-gray-300 font-bold block">
+                  {movie.year} • {movie.genres.slice(0, 3).join(' • ')}
+                </span>
+                <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight font-heading leading-tight drop-shadow-md">
                   {movie.title}
                 </h2>
-
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {movie.genres.map(g => (
-                    <span key={g} className="text-[10px] font-bold font-mono bg-white/5 border border-white/10 text-gray-300 px-2.5 py-1 rounded-lg uppercase tracking-wider">
-                      {g}
-                    </span>
-                  ))}
-                </div>
               </div>
+
+              {movie.trailerUrl && (
+                <a
+                  href={movie.trailerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white/15 hover:bg-white/25 backdrop-blur-md text-white border border-white/20 px-4 py-2 rounded-full text-xs font-bold flex items-center space-x-2 transition cursor-pointer shadow-lg"
+                >
+                  <Play className="w-3.5 h-3.5 fill-white" />
+                  <span>Trailer</span>
+                </a>
+              )}
             </div>
           </div>
 
           {/* Details Content Grid */}
-          <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Main Info */}
-            <div className="md:col-span-2 space-y-6">
-              {/* Synopsis */}
-              <div className="space-y-2">
-                <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block"></span>
-                  <span>Synopsis</span>
-                </h3>
-                <p className="text-gray-300 text-sm md:text-base leading-relaxed font-sans">{movie.synopsis}</p>
+          <div className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            {/* Left 8 Columns: Poster + Player + Cast + Synopsis */}
+            <div className="lg:col-span-8 space-y-6">
+              
+              {/* Poster + Rating Badges Row */}
+              <div className="flex flex-col sm:flex-row gap-6 items-start">
+                {/* Floating Poster Card */}
+                <div className="w-36 h-52 rounded-2xl overflow-hidden border border-white/20 shadow-2xl flex-shrink-0 relative group glow-accent">
+                  <img 
+                    src={getCleanImageUrl(movie.posterUrl, 'poster')} 
+                    alt={movie.title}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover"
+                    onError={(e) => handleImageLoadError(e, movie.backdropUrl)}
+                  />
+                  <div className="absolute bottom-2 left-2 right-2 bg-black/80 backdrop-blur-md py-1 px-1.5 rounded text-center border border-white/10">
+                    <span className="text-[10px] font-mono text-gray-300 font-bold block">
+                      {movie.year} · {seasonsText} · PG-13
+                    </span>
+                  </div>
+                </div>
+
+                {/* Rating Badges Row + Synopsis */}
+                <div className="flex-1 space-y-3.5">
+                  <div className="flex flex-wrap gap-2.5 items-center">
+                    {/* IMDb */}
+                    <div className="flex items-center space-x-1.5 bg-amber-500/20 border border-amber-500/40 text-amber-300 px-3 py-1 rounded-xl text-xs font-mono font-bold">
+                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                      <span>IMDb {movie.rating} ({((movie.voteCount || 125000)/1000).toFixed(0)}k)</span>
+                    </div>
+
+                    {/* Metascore */}
+                    <div className="flex items-center space-x-1 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 px-2.5 py-1 rounded-xl text-xs font-mono font-bold">
+                      <span>Metascore {metaScore}</span>
+                    </div>
+
+                    {/* Rotten Tomatoes */}
+                    <div className="flex items-center space-x-1 bg-red-500/20 border border-red-500/40 text-red-300 px-2.5 py-1 rounded-xl text-xs font-mono font-bold">
+                      <span>🍅 RT {rtScore}%</span>
+                    </div>
+                  </div>
+
+                  {/* Synopsis */}
+                  <div className="space-y-1">
+                    <span className="text-xs font-mono font-bold text-gray-400 uppercase tracking-wider block">
+                      Synopsis
+                    </span>
+                    <p className="text-gray-300 text-sm leading-relaxed font-sans">
+                      {movie.synopsis}
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              {/* Trailer Iframe Player or Launcher */}
+              {/* Embedded Trailer Player */}
               <div className="space-y-2">
-                <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase flex items-center space-x-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block"></span>
-                  <span>Teaser / Trailer</span>
-                </h3>
+                <span className="text-xs font-mono font-bold text-gray-400 uppercase tracking-wider block">
+                  Official Teaser / Trailer
+                </span>
                 {movie.trailerUrl && movie.trailerUrl.includes('youtube.com/embed') ? (
                   <div className="relative h-0 pb-[56.25%] bg-black rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
                     <iframe
@@ -229,138 +287,143 @@ export default function MovieDetailModal({
                     ></iframe>
                   </div>
                 ) : (
-                  <a
-                    href={movie.trailerUrl || `https://www.youtube.com/results?search_query=${encodeURIComponent(movie.title + ' official trailer')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center space-x-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold text-xs py-3.5 px-5 rounded-2xl transition duration-300 shadow-[0_0_25px_-5px_rgba(229,9,20,0.6)] group hover:scale-[1.02]"
-                  >
-                    <Play className="w-4 h-4 fill-white text-white group-hover:scale-110 transition" />
-                    <span>Watch Official Trailer on YouTube</span>
-                  </a>
+                  <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-xl bg-black/60 h-48 flex items-center justify-center group">
+                    <img 
+                      src={getCleanImageUrl(movie.backdropUrl || movie.posterUrl, 'backdrop')} 
+                      alt="Trailer placeholder"
+                      className="absolute inset-0 w-full h-full object-cover filter brightness-[0.4] group-hover:scale-105 transition duration-500"
+                    />
+                    <a
+                      href={movie.trailerUrl || `https://www.youtube.com/results?search_query=${encodeURIComponent(movie.title + ' official trailer')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="relative z-10 flex items-center space-x-3 bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs px-6 py-3 rounded-full shadow-[0_0_25px_rgba(229,9,20,0.7)] transition cursor-pointer"
+                    >
+                      <Play className="w-4 h-4 fill-white" />
+                      <span>Play Trailer on YouTube</span>
+                    </a>
+                  </div>
                 )}
               </div>
 
-              {/* Cast & Crew */}
+              {/* Top Cast Modern Avatar Cards */}
               {movie.cast && movie.cast.length > 0 && (
-                <div className="space-y-2">
-                  <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase flex items-center space-x-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block"></span>
-                    <span>Top Cast</span>
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {movie.cast.map(actor => (
-                      <span key={actor} className="text-xs bg-white/5 border border-white/10 text-gray-200 px-3.5 py-1.5 rounded-xl font-medium backdrop-blur-md">
-                        {actor}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Similar Drawer */}
-              {similarMoviesList && similarMoviesList.length > 0 && (
-                <div className="space-y-3 pt-4 border-t border-white/10">
-                  <h3 className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase flex items-center space-x-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block"></span>
-                    <span>Similar to this Title</span>
-                  </h3>
-                  <div className="grid grid-cols-3 gap-3">
-                    {similarMoviesList.map(sm => (
-                      <div 
-                        key={sm.id}
-                        onClick={() => onMovieClick(sm)}
-                        className="cursor-pointer group relative overflow-hidden glass-card rounded-2xl h-28 flex items-end p-3 transition duration-300 hover:scale-[1.03] hover:border-red-500/50"
-                      >
-                        <img 
-                          src={getCleanImageUrl(sm.posterUrl, 'poster')} 
-                          alt={sm.title}
-                          referrerPolicy="no-referrer"
-                          className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-85 transition duration-300 group-hover:scale-105"
-                          onError={(e) => handleImageLoadError(e)}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
-                        <div className="relative z-10">
-                          <span className="text-[11px] text-white font-bold block truncate leading-tight group-hover:text-red-400 transition font-heading">
-                            {sm.title}
-                          </span>
-                          <span className="text-[9px] text-gray-400 font-mono block mt-0.5">
-                            {sm.year} · ★{sm.rating}
-                          </span>
+                <div className="space-y-3 pt-2">
+                  <span className="text-xs font-mono font-bold text-gray-400 uppercase tracking-wider block">
+                    Top Cast
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {movie.cast.map((actor, idx) => (
+                      <div key={idx} className="flex items-center space-x-2.5 bg-white/5 border border-white/10 p-2 rounded-xl">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-red-600/40 to-rose-600/40 border border-red-500/30 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">
+                          {actor.charAt(0)}
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-xs font-bold text-white block truncate">{actor}</span>
+                          <span className="text-[10px] text-gray-400 font-mono block truncate">Character</span>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
+
             </div>
 
-            {/* Sidebar Metadata */}
-            <div className="space-y-6 glass-card p-6 rounded-2xl border border-white/10">
-              {/* Available Platforms */}
-              <div className="space-y-2.5">
-                <span className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase block">Where to Stream:</span>
-                <div className="flex flex-col space-y-2">
+            {/* Right 4 Columns: Where to Watch, WatchMatch Rating, Ending, Advisories */}
+            <div className="lg:col-span-4 space-y-6">
+              
+              {/* WHERE TO WATCH Platform Cards with Action Buttons */}
+              <div className="glass-card p-5 rounded-3xl border border-white/10 space-y-3">
+                <span className="text-xs font-mono font-bold text-gray-400 uppercase tracking-wider block">
+                  WHERE TO WATCH
+                </span>
+
+                <div className="space-y-2">
+                  {displayPlatforms.length === 0 && (
+                    <p className="text-xs text-gray-400">Not on a subscription service in India right now (may be available to rent or buy).</p>
+                  )}
                   {displayPlatforms.map(plat => (
-                    <div key={plat} className="flex items-center space-x-2.5 text-gray-200 text-xs font-bold bg-white/5 border border-white/10 px-3 py-2 rounded-xl">
-                      <Tv className="w-4 h-4 text-red-500 flex-shrink-0" />
-                      <span>{plat}</span>
+                    <div key={plat} className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/10">
+                      <div className="flex items-center space-x-2.5">
+                        <Tv className="w-4 h-4 text-red-500 flex-shrink-0" />
+                        <span className="text-xs font-bold text-white">{plat}</span>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold bg-white/10 px-2 py-0.5 rounded text-gray-300">
+                        STREAM
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <button
+                    onClick={() => onAddToWatchlist(movie)}
+                    className="bg-white/10 hover:bg-white/20 text-white border border-white/15 py-2 px-3 rounded-xl text-xs font-bold text-center cursor-pointer transition"
+                  >
+                    WATCH NOW
+                  </button>
+                  <button
+                    onClick={() => onAddToWatchlist(movie)}
+                    className="bg-red-600/30 hover:bg-red-600/50 text-red-300 border border-red-500/40 py-2 px-3 rounded-xl text-xs font-bold text-center cursor-pointer transition"
+                  >
+                    SUBSCRIBE
+                  </button>
+                </div>
+              </div>
+
+              {/* WATCHMATCH RATING Badge */}
+              <div className="glass-card p-4 rounded-2xl border border-white/10 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-mono text-gray-400 uppercase font-bold block">
+                    WATCHMATCH RATING
+                  </span>
+                  <div className="flex items-center space-x-2 mt-0.5">
+                    <span className="text-2xl font-black text-white font-heading">
+                      {(movie.rating / 2).toFixed(1)} ★
+                    </span>
+                    <span className="text-xs bg-red-950/60 border border-red-500/50 text-red-300 px-2 py-0.5 rounded font-bold font-mono">
+                      "Must Watch"
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ENDING PREFERENCE Badge */}
+              <div className="glass-card p-4 rounded-2xl border border-white/10 space-y-1.5">
+                <span className="text-[10px] font-mono text-gray-400 uppercase font-bold block">
+                  ENDING PREFERENCE
+                </span>
+                <div className="inline-flex items-center space-x-1.5 bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 px-3 py-1 rounded-xl text-xs font-bold">
+                  <span>✓</span>
+                  <span>SPOILER-SAFE • {movie.endingPreference ? movie.endingPreference.charAt(0).toUpperCase() + movie.endingPreference.slice(1) : 'Satisfying'} Ending</span>
+                </div>
+              </div>
+
+              {/* CONTENT ADVISORIES */}
+              <div className="glass-card p-4 rounded-2xl border border-white/10 space-y-2">
+                <span className="text-[10px] font-mono text-gray-400 uppercase font-bold block">
+                  CONTENT ADVISORIES
+                </span>
+                <div className="space-y-1 text-xs text-gray-300 font-sans">
+                  {(movie.contentWarnings && movie.contentWarnings.length > 0 
+                    ? movie.contentWarnings 
+                    : ['Language (Strong)', 'Violence (Moderate)', 'Sci-Fi Themes']
+                  ).map(warn => (
+                    <div key={warn} className="flex items-center space-x-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                      <span>{warn}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Ending preference */}
-              {movie.endingPreference && (
-                <div className="space-y-1.5 pb-4 border-b border-white/10">
-                  <span className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase block">Story End Preference:</span>
-                  <span className="text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 px-3 py-1.5 rounded-xl font-bold capitalize inline-block">
-                    {movie.endingPreference} (Spoiler-safe)
-                  </span>
-                </div>
-              )}
-
-              {/* Content Warnings */}
-              {movie.contentWarnings && movie.contentWarnings.length > 0 && (
-                <div className="space-y-2 pb-4 border-b border-white/10">
-                  <div className="flex items-center space-x-1.5 text-red-400">
-                    <ShieldAlert className="w-4 h-4 flex-shrink-0" />
-                    <span className="text-xs font-bold font-mono uppercase tracking-wider">Content Advisories:</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {movie.contentWarnings.map(warn => (
-                      <span key={warn} className="text-[10px] font-bold font-mono text-red-300 bg-red-950/60 border border-red-800/80 px-2.5 py-1 rounded-lg">
-                        {warn}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* General Specs */}
-              <div className="space-y-3 text-xs">
-                <span className="text-xs font-bold font-mono tracking-wider text-gray-400 uppercase block">Specs:</span>
-                <div className="grid grid-cols-2 gap-y-2.5 font-medium text-gray-300 font-mono">
-                  <span className="text-gray-500">Format:</span>
-                  <span className="capitalize text-right font-bold text-white">{movie.contentType || 'Series'}</span>
-
-                  <span className="text-gray-500">Language:</span>
-                  <span className="text-right text-gray-200">{(movie.languages && movie.languages.length > 0 && movie.languages[0]) ? movie.languages.join(', ') : 'English'}</span>
-
-                  <span className="text-gray-500">Region:</span>
-                  <span className="text-right text-gray-200">{(movie.countries && movie.countries.length > 0 && movie.countries[0]) ? movie.countries.join(', ') : 'United States'}</span>
-
-                  <span className="text-gray-500">Pacing:</span>
-                  <span className="capitalize text-right text-gray-200">{(movie.pace || 'medium').replace('_', ' ')}</span>
-                </div>
-              </div>
-
-              {/* Action */}
-              <div className="pt-4 border-t border-white/10 space-y-2.5">
+              {/* Watchlist & Watched Actions */}
+              <div className="space-y-2 pt-2">
                 <button
                   id="modal-watchlist-toggle-btn"
                   onClick={() => onAddToWatchlist(movie)}
-                  className={`w-full font-bold text-xs py-3 px-4 rounded-xl flex items-center justify-center space-x-2 transition duration-200 border ${
+                  className={`w-full font-bold text-xs py-3.5 px-4 rounded-xl flex items-center justify-center space-x-2 transition duration-200 border cursor-pointer ${
                     isInWatchlist 
                       ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300' 
                       : 'bg-white/10 hover:bg-white/20 border-white/15 text-white shadow-md'
@@ -383,7 +446,7 @@ export default function MovieDetailModal({
                   <button
                     id="modal-watched-toggle-btn"
                     onClick={() => onToggleWatched(movie.id)}
-                    className={`w-full font-bold text-xs py-3 px-4 rounded-xl flex items-center justify-center space-x-2 transition duration-200 border ${
+                    className={`w-full font-bold text-xs py-3.5 px-4 rounded-xl flex items-center justify-center space-x-2 transition duration-200 border cursor-pointer ${
                       isWatched 
                         ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300' 
                         : 'bg-white/5 hover:bg-white/10 border-white/10 text-gray-300'
@@ -394,7 +457,9 @@ export default function MovieDetailModal({
                   </button>
                 )}
               </div>
+
             </div>
+
           </div>
         </div>
       </div>

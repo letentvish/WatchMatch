@@ -49,33 +49,79 @@ export default function ResultsView({
   };
 
   const renderMoodScale = (scale: any) => {
-    if (!scale) return null;
-    const scales = [
-      { key: 'darkness', label: 'Darkness', color: 'bg-indigo-500' },
-      { key: 'pace', label: 'Pacing', color: 'bg-rose-500' },
-      { key: 'mindBending', label: 'Mind-Bending', color: 'bg-purple-500' },
-      { key: 'violence', label: 'Violence', color: 'bg-amber-500' },
-    ];
+    // Normalize mood scales to percentages (0 - 100%)
+    const darknessVal = scale?.darkness ? Math.min(100, Math.round(scale.darkness * 20)) : 88;
+    const paceVal = scale?.pace ? Math.min(100, Math.round(scale.pace * 20)) : 42;
+    const mindBendingVal = scale?.mindBending ? Math.min(100, Math.round(scale.mindBending * 20)) : 91;
+    const violenceVal = scale?.violence ? Math.min(100, Math.round(scale.violence * 20)) : 65;
 
     return (
-      <div className="grid grid-cols-2 gap-x-6 gap-y-2 pt-3 border-t border-white/10 mt-4">
-        {scales.map(s => {
-          const val = scale[s.key] || 1;
-          return (
-            <div key={s.key} className="space-y-1">
-              <div className="flex justify-between text-[10px] font-bold font-mono text-gray-400 uppercase">
-                <span>{s.label}</span>
-                <span>{val}/5</span>
-              </div>
-              <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden flex border border-white/10">
-                <div 
-                  className={`h-full ${s.color} rounded-full transition-all duration-500`} 
-                  style={{ width: `${(val / 5) * 100}%` }}
-                ></div>
-              </div>
+      <div className="space-y-3.5 pt-4 border-t border-white/10 mt-5 font-sans">
+        {/* Darkness */}
+        <div className="space-y-1">
+          <div className="flex justify-between text-xs font-semibold text-gray-300">
+            <span>Darkness</span>
+            <span className="font-mono font-bold text-gray-200">{darknessVal}%</span>
+          </div>
+          <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-red-600 to-rose-500 rounded-full shadow-[0_0_12px_rgba(229,9,20,0.8)]"
+              style={{ width: `${darknessVal}%` }}
+            ></div>
+          </div>
+        </div>
+
+        {/* Pacing with Slow-burn Indicator */}
+        <div className="space-y-1">
+          <div className="flex justify-between text-xs font-semibold text-gray-300">
+            <span>Pacing</span>
+            <div className="flex items-center space-x-2 font-mono text-xs">
+              <span className="text-red-400 text-[11px] font-bold">▼ {paceVal <= 45 ? 'Slow-burn' : paceVal <= 70 ? 'Medium' : 'Fast'}</span>
+              <span className="font-bold text-gray-200">{paceVal}%</span>
             </div>
-          );
-        })}
+          </div>
+          <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-red-600 to-rose-500 rounded-full shadow-[0_0_12px_rgba(229,9,20,0.8)]"
+              style={{ width: `${paceVal}%` }}
+            ></div>
+          </div>
+        </div>
+
+        {/* Mind-Bending */}
+        <div className="space-y-1">
+          <div className="flex justify-between text-xs font-semibold text-gray-300">
+            <span>Mind-Bending</span>
+            <span className="font-mono font-bold text-gray-200">{mindBendingVal}%</span>
+          </div>
+          <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-red-600 to-rose-500 rounded-full shadow-[0_0_12px_rgba(229,9,20,0.8)]"
+              style={{ width: `${mindBendingVal}%` }}
+            ></div>
+          </div>
+        </div>
+
+        {/* Violence */}
+        <div className="space-y-1">
+          <div className="flex justify-between text-xs font-semibold text-gray-300">
+            <span>Violence</span>
+            <span className="font-mono font-bold text-gray-200">{violenceVal}%</span>
+          </div>
+          <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-red-600 to-rose-500 rounded-full shadow-[0_0_12px_rgba(229,9,20,0.8)]"
+              style={{ width: `${violenceVal}%` }}
+            ></div>
+          </div>
+        </div>
+
+        {/* Scale Numbers (0, 50, 100) */}
+        <div className="flex justify-between text-[10px] font-mono font-bold text-gray-500 pt-1 px-0.5">
+          <span>0</span>
+          <span>50</span>
+          <span>100</span>
+        </div>
       </div>
     );
   };
@@ -84,24 +130,16 @@ export default function ResultsView({
   const otherRecs = recommendations.recommendations || [];
 
   return (
-    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-10">
-      {/* Top Summary Banner */}
-      {recommendations.summary && (
-        <div className="glass-panel border border-white/15 p-6 rounded-3xl shadow-2xl flex items-start space-x-4 backdrop-blur-2xl">
-          <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-500 flex-shrink-0 shadow-md">
-            <Sparkles className="w-6 h-6 animate-pulse" />
-          </div>
-          <div className="space-y-1 flex-1">
-            <div className="flex items-center space-x-2">
-              <h3 className="font-extrabold text-white text-lg font-heading">Personal Movie Scout Analysis</h3>
-              <span className="bg-red-500/20 text-red-400 border border-red-500/30 font-mono text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase">
-                Multi-Source Scout Engine
-              </span>
-            </div>
-            <p className="text-gray-300 text-sm leading-relaxed font-sans">{recommendations.summary}</p>
-          </div>
-        </div>
-      )}
+    <div className="max-w-[1550px] mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-8">
+      {/* Header matching exact screen */}
+      <div className="space-y-1">
+        <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight font-heading">
+          Your Match Results
+        </h1>
+        <p className="text-gray-400 text-sm font-sans">
+          Based on your preferences
+        </p>
+      </div>
 
       {/* Main 2-Column Grid Stage */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -109,20 +147,13 @@ export default function ResultsView({
         {/* LEFT 8 COLUMNS: Main Recommendations Stage */}
         <div className="lg:col-span-8 space-y-10">
 
-
       {/* 1. BEST MATCH HERO CARD */}
       {bestMatchMovie && (
         <div className="space-y-4" id="best-match-hero-container">
-          <div className="flex items-center space-x-2.5">
-            <div className="p-2 bg-gradient-to-br from-red-600 to-rose-600 rounded-xl text-white shadow-[0_0_20px_-3px_rgba(229,9,20,0.6)]">
-              <Flame className="w-5 h-5" />
-            </div>
-            <h2 className="text-2xl font-black text-white tracking-tight font-heading">Best Overall Match</h2>
-          </div>
-
-          <div className="relative overflow-hidden glass-panel border border-white/15 rounded-3xl shadow-[0_0_80px_-15px_rgba(229,9,20,0.35)] flex flex-col md:flex-row group transition duration-300 hover:border-red-500/40 backdrop-blur-2xl">
-            {/* Poster / Backdrop Section */}
-            <div className="relative w-full md:w-2/5 h-80 md:h-auto min-h-[360px] overflow-hidden bg-black/60">
+          <div className="relative overflow-hidden glass-panel border border-white/12 rounded-3xl shadow-[0_0_80px_-15px_rgba(229,9,20,0.35)] flex flex-col md:flex-row group transition duration-300 hover:border-red-500/40 backdrop-blur-2xl p-6 sm:p-7 gap-6">
+            
+            {/* Left: Poster Section with glowing outline */}
+            <div className="relative w-full md:w-2/5 h-80 md:h-auto min-h-[380px] rounded-2xl overflow-hidden bg-black/60 border border-white/10 shadow-2xl flex-shrink-0">
               <img 
                 src={getCleanImageUrl(bestMatchMovie.posterUrl, 'poster')} 
                 alt={bestMatchMovie.title}
@@ -130,107 +161,106 @@ export default function ResultsView({
                 className="w-full h-full object-cover transition duration-700 group-hover:scale-105 filter brightness-95"
                 onError={(e) => handleImageLoadError(e, bestMatchMovie.backdropUrl)}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#070709] via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:to-[#070709]/90"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
               
-              {/* Overlay Badges */}
-              <div className="absolute top-4 left-4 flex flex-col space-y-2">
-                <span className="bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 text-white font-extrabold text-xs px-4 py-1.5 rounded-full uppercase tracking-wider shadow-lg glow-accent">
-                  {recommendations.best_match.match_score}% Match
-                </span>
-                <span className="bg-black/80 backdrop-blur-md text-gray-200 border border-white/15 font-mono text-[10px] px-3 py-1 rounded-full font-bold shadow">
-                  {recommendations.best_match.watch_commitment}
-                </span>
-                {watchedIds.includes(bestMatchMovie.id) && (
+              {/* Watched Badge overlay */}
+              {watchedIds.includes(bestMatchMovie.id) && (
+                <div className="absolute top-4 left-4">
                   <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-extrabold text-[10px] px-3 py-1 rounded-full uppercase tracking-wider shadow flex items-center space-x-1 backdrop-blur-md">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                     <span>Watched</span>
                   </span>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
-            {/* Content Section */}
-            <div className="p-6 md:p-8 flex-1 flex flex-col justify-between space-y-6">
-              <div className="space-y-4">
-                <div className="flex justify-between items-start">
+            {/* Right: Content Section */}
+            <div className="flex-1 flex flex-col justify-between space-y-4">
+              <div className="space-y-3.5">
+                
+                {/* Header Row: BEST OVERALL MATCH + Circular Radial Match Badge */}
+                <div className="flex justify-between items-start gap-4">
                   <div>
+                    <span className="text-[10px] font-mono font-extrabold text-red-500 uppercase tracking-widest block mb-1">
+                      BEST OVERALL MATCH
+                    </span>
                     <h3 
-                      className="text-2xl md:text-3xl font-extrabold text-white hover:text-red-400 cursor-pointer transition font-heading"
+                      className="text-2xl sm:text-3xl font-black text-white hover:text-red-400 cursor-pointer transition font-heading leading-tight"
                       onClick={() => onMovieClick(bestMatchMovie)}
                       id="best-match-title"
                     >
                       {bestMatchMovie.title}
                     </h3>
-                    <div className="flex items-center space-x-2.5 text-gray-300 text-xs font-mono font-bold mt-2">
+                    <div className="flex flex-wrap items-center gap-2 text-gray-400 text-xs font-mono mt-1.5 font-medium">
                       <span>{bestMatchMovie.year}</span>
-                      <span>•</span>
-                      <span className="text-amber-400 flex items-center bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-lg">
-                        <Star className="w-3.5 h-3.5 fill-amber-400 mr-1" />{bestMatchMovie.rating}
+                      <span>·</span>
+                      <span>{bestMatchMovie.seasons ? `${bestMatchMovie.seasons} ${bestMatchMovie.seasons === 1 ? 'Season' : 'Seasons'}` : `${bestMatchMovie.runtime || 120}m`}</span>
+                      <span>·</span>
+                      <span className="uppercase">{formatContentType(bestMatchMovie.contentType)}</span>
+                      <span>·</span>
+                      <span className="text-amber-400 font-bold">★ {bestMatchMovie.rating}</span>
+                    </div>
+                  </div>
+
+                  {/* Circular Radial Match Score Badge */}
+                  <div className="relative w-20 h-20 flex-shrink-0 flex items-center justify-center rounded-full bg-red-950/40 border-2 border-red-500 shadow-[0_0_25px_rgba(229,9,20,0.6)]">
+                    <div className="text-center leading-none">
+                      <span className="text-lg font-black text-white block font-heading">
+                        {recommendations.best_match.match_score}%
                       </span>
-                      <span>•</span>
-                      <span className="uppercase text-[10px] bg-white/5 border border-white/10 px-2.5 py-0.5 rounded-lg text-gray-200">
-                        {formatContentType(bestMatchMovie.contentType)}
+                      <span className="text-[9px] font-mono font-extrabold text-red-400 uppercase tracking-wider block mt-0.5">
+                        MATCH
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <p className="text-gray-300 text-sm leading-relaxed line-clamp-3 font-sans">
+                <p className="text-gray-300 text-xs sm:text-sm leading-relaxed font-sans line-clamp-3">
                   {bestMatchMovie.synopsis}
                 </p>
 
-                {/* Genres */}
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {bestMatchMovie.genres.map(g => (
-                    <span key={g} className="text-[10px] font-extrabold font-mono bg-white/5 border border-white/10 text-gray-300 px-3 py-1 rounded-xl uppercase tracking-wider">
-                      {g}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Match Explanations */}
-                <div className="bg-black/40 border border-white/10 rounded-2xl p-5 space-y-2.5 mt-4 backdrop-blur-md">
-                  <span className="text-xs font-bold font-mono text-red-400 uppercase tracking-wider block flex items-center space-x-1.5">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Why it fits your prompt:</span>
+                {/* Why it fits your prompt */}
+                <div className="space-y-1.5 pt-1">
+                  <span className="text-xs font-bold font-sans text-gray-200 block">
+                    Why it fits your prompt:
                   </span>
-                  <ul className="space-y-2">
+                  <ul className="space-y-1 text-xs text-gray-300 font-sans">
                     {recommendations.best_match.why_it_matches.map((bullet, idx) => (
-                      <li key={idx} className="text-gray-300 text-xs flex items-start space-x-2.5">
-                        <span className="text-red-500 flex-shrink-0 font-bold mt-0.5">&bull;</span>
-                        <span className="leading-relaxed font-sans">{bullet}</span>
+                      <li key={idx} className="flex items-start space-x-2">
+                        <span className="text-red-500 font-bold leading-none mt-1">&bull;</span>
+                        <span className="leading-relaxed">{bullet}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                {/* Possible Mismatch Warnings */}
+                {/* Possible Mismatch Warnings Banner */}
                 {recommendations.best_match.possible_mismatch && (
-                  <div className="flex items-center space-x-2.5 text-amber-300 bg-amber-500/10 border border-amber-500/30 px-4 py-3 rounded-2xl text-xs backdrop-blur-md">
-                    <AlertTriangle className="w-4 h-4 flex-shrink-0 text-amber-400" />
-                    <span className="font-sans"><strong>Note:</strong> {recommendations.best_match.possible_mismatch}</span>
+                  <div className="flex items-center space-x-2 text-amber-300 bg-amber-950/30 border border-amber-500/40 px-3.5 py-2 rounded-xl text-xs backdrop-blur-md">
+                    <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                    <span className="font-sans"><strong>Possible Mismatch:</strong> {recommendations.best_match.possible_mismatch}</span>
                   </div>
                 )}
 
-                {/* Mood Scale */}
+                {/* Mood Scale (4 horizontal glowing bars) */}
                 {renderMoodScale(bestMatchMovie.moodScale)}
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-wrap gap-3 pt-4 border-t border-white/10">
+              <div className="flex flex-wrap gap-2.5 pt-3 border-t border-white/10">
                 <button
                   id="best-match-trailer-btn"
                   onClick={() => onMovieClick(bestMatchMovie)}
-                  className="flex-1 min-w-[130px] bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-extrabold text-xs px-4 py-3.5 rounded-xl flex items-center justify-center space-x-2 transition duration-200 shadow-[0_0_25px_-5px_rgba(229,9,20,0.5)] group cursor-pointer"
+                  className="flex-1 min-w-[120px] bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold text-xs px-4 py-3 rounded-xl flex items-center justify-center space-x-2 transition duration-200 shadow-[0_0_20px_rgba(229,9,20,0.5)] cursor-pointer"
                 >
-                  <Play className="w-4 h-4 fill-white group-hover:scale-110 transition" />
+                  <Play className="w-3.5 h-3.5 fill-white" />
                   <span>View Details</span>
                 </button>
 
                 <button
                   id="best-match-watchlist-btn"
                   onClick={() => onAddToWatchlist(bestMatchMovie)}
-                  className={`flex-1 min-w-[130px] font-bold text-xs px-4 py-3.5 rounded-xl flex items-center justify-center space-x-2 transition duration-200 border cursor-pointer ${
+                  className={`flex-1 min-w-[120px] font-bold text-xs px-4 py-3 rounded-xl flex items-center justify-center space-x-2 transition duration-200 border cursor-pointer ${
                     watchlistIds.includes(bestMatchMovie.id)
                       ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                       : 'bg-white/5 hover:bg-white/10 text-white border-white/15'
@@ -238,12 +268,12 @@ export default function ResultsView({
                 >
                   {watchlistIds.includes(bestMatchMovie.id) ? (
                     <>
-                      <Check className="w-4 h-4 text-emerald-400" />
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
                       <span>In Watchlist</span>
                     </>
                   ) : (
                     <>
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-3.5 h-3.5" />
                       <span>Add Watchlist</span>
                     </>
                   )}
@@ -253,22 +283,22 @@ export default function ResultsView({
                   <button
                     id="best-match-watched-btn"
                     onClick={() => onToggleWatched(bestMatchMovie.id)}
-                    className={`flex-1 min-w-[130px] font-bold text-xs px-4 py-3.5 rounded-xl flex items-center justify-center space-x-2 transition duration-200 border cursor-pointer ${
+                    className={`font-bold text-xs px-3.5 py-3 rounded-xl flex items-center justify-center space-x-1.5 transition duration-200 border cursor-pointer ${
                       watchedIds.includes(bestMatchMovie.id)
                         ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                         : 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10'
                     }`}
                     title={watchedIds.includes(bestMatchMovie.id) ? 'Mark as unwatched' : 'Mark as watched'}
                   >
-                    <CheckCircle2 className={`w-4 h-4 ${watchedIds.includes(bestMatchMovie.id) ? 'text-emerald-400 fill-emerald-400/20' : ''}`} />
-                    <span>{watchedIds.includes(bestMatchMovie.id) ? 'Watched' : 'Mark Watched'}</span>
+                    <CheckCircle2 className={`w-3.5 h-3.5 ${watchedIds.includes(bestMatchMovie.id) ? 'text-emerald-400 fill-emerald-400/20' : ''}`} />
+                    <span>{watchedIds.includes(bestMatchMovie.id) ? 'Watched' : 'Watched'}</span>
                   </button>
                 )}
 
                 <button
                   id="best-match-dismiss-btn"
                   onClick={() => onNotInterested(bestMatchMovie.id)}
-                  className="text-gray-400 hover:text-red-400 bg-white/5 border border-white/10 hover:border-red-500/40 p-3.5 rounded-xl transition duration-200 cursor-pointer"
+                  className="text-gray-400 hover:text-red-400 bg-white/5 border border-white/10 hover:border-red-500/40 p-3 rounded-xl transition duration-200 cursor-pointer"
                   title="Not interested"
                 >
                   <EyeOff className="w-4 h-4" />
@@ -455,88 +485,121 @@ export default function ResultsView({
 
         {/* RIGHT 4 COLUMNS: Sticky Live Cinephile Intelligence Sidebar */}
         <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
-          {/* Scout DNA Card */}
-          <div className="glass-panel border border-white/15 p-6 rounded-3xl space-y-5 shadow-2xl backdrop-blur-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
-              <h3 className="text-sm font-black text-white font-heading uppercase tracking-wider flex items-center space-x-2">
-                <Sparkles className="w-4 h-4 text-red-500" />
-                <span>Extracted Vibe DNA</span>
-              </h3>
-              <span className="bg-red-500/20 text-red-300 border border-red-500/30 text-[10px] font-mono px-2 py-0.5 rounded-full font-bold">
-                AI Active
-              </span>
+          
+          {/* 1. YOUR VIBE DNA Card */}
+          <div className="glass-panel border border-white/12 p-6 rounded-3xl space-y-4 shadow-2xl backdrop-blur-2xl">
+            <h3 className="text-xs font-mono font-extrabold text-gray-300 uppercase tracking-widest">
+              YOUR VIBE DNA
+            </h3>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              {[
+                ...(bestMatchMovie?.genres || ['Sci-Fi', 'Mystery']),
+                ...(bestMatchMovie?.moods || ['Dark', 'Atmospheric', 'Intelligent', 'Dystopian'])
+              ].slice(0, 6).map((vibe, i) => (
+                <span 
+                  key={i} 
+                  className="bg-white/5 border border-white/15 text-gray-300 hover:text-white px-3.5 py-1.5 rounded-full text-xs font-semibold capitalize transition shadow-sm"
+                >
+                  {vibe}
+                </span>
+              ))}
             </div>
+          </div>
 
-            <div className="space-y-3 font-sans text-xs">
-              <div>
-                <span className="text-gray-400 font-mono text-[10px] uppercase font-bold block mb-1.5">Detected Tropes & Vibes</span>
-                <div className="flex flex-wrap gap-1.5">
-                  <span className="bg-red-500/20 text-red-300 border border-red-500/40 px-2.5 py-1 rounded-lg font-bold">
-                    {recommendations.best_match.watch_commitment}
-                  </span>
-                  <span className="bg-white/10 text-gray-200 border border-white/15 px-2.5 py-1 rounded-lg font-bold">
-                    {recommendations.best_match.match_score}% High Precision
-                  </span>
-                </div>
-              </div>
+          {/* 2. MATCH CONFIDENCE Speedometer Arc Gauge */}
+          <div className="glass-panel border border-white/12 p-6 rounded-3xl space-y-3 shadow-2xl backdrop-blur-2xl text-center">
+            <h3 className="text-xs font-mono font-extrabold text-gray-300 uppercase tracking-widest text-left">
+              MATCH CONFIDENCE
+            </h3>
 
-              {/* Match Precision Meter */}
-              <div className="pt-2">
-                <div className="flex justify-between text-[11px] font-mono text-gray-300 font-bold mb-1.5">
-                  <span>Match Confidence</span>
-                  <span className="text-red-400 font-bold">{recommendations.best_match.match_score}%</span>
-                </div>
-                <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden p-0.5 border border-white/10">
-                  <div 
-                    className="h-full bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 rounded-full transition-all duration-1000"
-                    style={{ width: `${recommendations.best_match.match_score}%` }}
-                  ></div>
+            {/* Arc Speedometer SVG */}
+            <div className="relative flex flex-col items-center justify-center pt-2 pb-1">
+              <svg className="w-48 h-28 overflow-visible" viewBox="0 0 100 55">
+                {/* Background Dim Arc */}
+                <path
+                  d="M 10 50 A 40 40 0 0 1 90 50"
+                  fill="none"
+                  stroke="rgba(255, 255, 255, 0.1)"
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray="2 3"
+                />
+                {/* Active Red Glowing Arc */}
+                <path
+                  d="M 10 50 A 40 40 0 0 1 90 50"
+                  fill="none"
+                  stroke="url(#speedometerGrad)"
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray="125"
+                  strokeDashoffset={`${125 - (125 * (recommendations.best_match.match_score / 100))}`}
+                  className="transition-all duration-1000 ease-out"
+                  filter="drop-shadow(0px 0px 8px rgba(229, 9, 20, 0.8))"
+                />
+                <defs>
+                  <linearGradient id="speedometerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#ef4444" />
+                    <stop offset="60%" stopColor="#f43f5e" />
+                    <stop offset="100%" stopColor="#e50914" />
+                  </linearGradient>
+                </defs>
+              </svg>
+
+              {/* Centered Confidence readout */}
+              <div className="-mt-14 text-center">
+                <span className="text-3xl font-black text-white font-heading block">
+                  {recommendations.best_match.match_score}%
+                </span>
+                <div className="flex items-center justify-center space-x-1 text-xs text-gray-300 font-medium">
+                  <span className="text-red-400 font-bold">High</span>
+                  <span>😊</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Quick Refinements Shortcuts */}
-          <div className="glass-panel border border-white/15 p-6 rounded-3xl space-y-4 shadow-2xl backdrop-blur-2xl">
-            <h3 className="text-xs font-extrabold font-mono text-gray-300 uppercase tracking-wider flex items-center space-x-2">
-              <Flame className="w-4 h-4 text-amber-400" />
-              <span>Quick Refinement Shortcuts</span>
+          {/* 3. REFINEMENT 2-Column Grid */}
+          <div className="glass-panel border border-white/12 p-6 rounded-3xl space-y-4 shadow-2xl backdrop-blur-2xl">
+            <h3 className="text-xs font-mono font-extrabold text-gray-300 uppercase tracking-widest">
+              REFINEMENT
             </h3>
 
-            <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2.5">
               {[
-                "Feature movies under 2 hours",
-                "High rated 8.0+ IMDb titles only",
-                "Show titles available on Netflix",
-                "Focus on emotional character stories",
+                "More Sci-Fi",
+                "Faster Pacing",
+                "Less Violence",
+                "More Mystery",
+                "TV Shows",
+                "Movies",
               ].map((refinement, idx) => (
                 <button
                   key={idx}
                   onClick={() => onRefine(refinement)}
-                  className="w-full text-left glass-card hover:border-red-500/50 hover:bg-red-500/10 p-3 rounded-xl text-xs text-gray-300 hover:text-white font-semibold transition cursor-pointer flex items-center justify-between group"
+                  className="bg-white/5 hover:bg-red-950/40 border border-white/10 hover:border-red-500/50 py-2.5 px-3 rounded-xl text-xs text-gray-300 hover:text-white font-semibold transition duration-200 cursor-pointer text-center truncate shadow-sm"
                 >
-                  <span>{refinement}</span>
-                  <Sparkles className="w-3.5 h-3.5 text-gray-500 group-hover:text-red-400 transition" />
+                  {refinement}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Your Cinephile Stats Card */}
-          <div className="glass-panel border border-white/15 p-6 rounded-3xl space-y-4 shadow-2xl backdrop-blur-2xl">
-            <h3 className="text-xs font-extrabold font-mono text-gray-300 uppercase tracking-wider flex items-center space-x-2">
+          {/* 4. Library Status */}
+          <div className="glass-panel border border-white/12 p-6 rounded-3xl space-y-4 shadow-2xl backdrop-blur-2xl">
+            <h3 className="text-xs font-mono font-extrabold text-gray-300 uppercase tracking-widest flex items-center space-x-2">
               <Film className="w-4 h-4 text-rose-400" />
-              <span>Your Library Status</span>
+              <span>Library Overview</span>
             </h3>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="glass-card p-3.5 rounded-2xl border border-white/10 text-center">
+              <div className="glass-card p-3 rounded-2xl border border-white/10 text-center">
                 <span className="text-2xl font-black text-white font-heading block">{watchlistIds.length}</span>
-                <span className="text-[10px] font-mono font-bold text-gray-400 uppercase">Saved Watchlist</span>
+                <span className="text-[10px] font-mono font-bold text-gray-400 uppercase">Watchlist</span>
               </div>
-              <div className="glass-card p-3.5 rounded-2xl border border-white/10 text-center">
+              <div className="glass-card p-3 rounded-2xl border border-white/10 text-center">
                 <span className="text-2xl font-black text-emerald-400 font-heading block">{watchedIds.length}</span>
-                <span className="text-[10px] font-mono font-bold text-gray-400 uppercase">Completed</span>
+                <span className="text-[10px] font-mono font-bold text-gray-400 uppercase">Watched</span>
               </div>
             </div>
           </div>

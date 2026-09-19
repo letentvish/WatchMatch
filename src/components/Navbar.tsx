@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Film, Sliders, Heart, User, Menu, X, Search, Loader2, Star } from 'lucide-react';
+import { Film, Sliders, Heart, User, Menu, X, Search, Loader2, Star, Sparkles } from 'lucide-react';
 import { Movie } from '../types';
 import { getCleanImageUrl, handleImageLoadError } from '../utils/imageHelper';
 
@@ -8,9 +8,11 @@ interface NavbarProps {
   onViewChange: (view: 'discover' | 'filters' | 'profile' | 'watchlist') => void;
   watchlistCount: number;
   onSelectMovie?: (movie: Movie) => void;
+  onOpenAISettings?: () => void;
+  aiLabel?: string;
 }
 
-export default function Navbar({ currentView, onViewChange, watchlistCount, onSelectMovie }: NavbarProps) {
+export default function Navbar({ currentView, onViewChange, watchlistCount, onSelectMovie, onOpenAISettings, aiLabel }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
@@ -159,26 +161,26 @@ export default function Navbar({ currentView, onViewChange, watchlistCount, onSe
 
 
         {/* Desktop Nav Links */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-semibold">
+        <nav className="hidden md:flex items-center gap-8 text-xs sm:text-sm font-semibold">
           <button
             id="nav-btn-discover"
             onClick={() => handleNavClick('discover')}
-            className={`flex items-center gap-2 transition-colors py-1 ${
+            className={`flex items-center gap-2 transition-all py-1 cursor-pointer ${
               currentView === 'discover'
-                ? 'text-white font-bold border-b-2 border-wm-accent'
-                : 'text-gray-300 hover:text-wm-accent'
+                ? 'text-white font-extrabold border-b-2 border-red-500 pb-1 text-red-400 drop-shadow-[0_0_10px_rgba(229,9,20,0.5)]'
+                : 'text-gray-300 hover:text-white'
             }`}
           >
-            <Film className="w-4 h-4 text-wm-accent" />
-            <span>Scout</span>
+            <Film className="w-4 h-4 text-red-500" />
+            <span>Discover</span>
           </button>
 
           <button
             id="nav-btn-filters"
             onClick={() => handleNavClick('filters')}
-            className={`flex items-center gap-2 transition-colors py-1 ${
+            className={`flex items-center gap-2 transition-all py-1 cursor-pointer ${
               currentView === 'filters'
-                ? 'text-white font-bold border-b-2 border-wm-accent'
+                ? 'text-white font-extrabold border-b-2 border-red-500 pb-1 text-red-400 drop-shadow-[0_0_10px_rgba(229,9,20,0.5)]'
                 : 'text-gray-300 hover:text-white'
             }`}
           >
@@ -189,32 +191,57 @@ export default function Navbar({ currentView, onViewChange, watchlistCount, onSe
           <button
             id="nav-btn-watchlist"
             onClick={() => handleNavClick('watchlist')}
-            className={`flex items-center gap-2 transition-colors relative py-1 ${
+            className={`flex items-center gap-2 transition-all relative py-1 cursor-pointer ${
               currentView === 'watchlist'
-                ? 'text-white font-bold border-b-2 border-wm-accent'
+                ? 'text-white font-extrabold border-b-2 border-red-500 pb-1 text-red-400 drop-shadow-[0_0_10px_rgba(229,9,20,0.5)]'
                 : 'text-gray-300 hover:text-white'
             }`}
           >
             <Heart className="w-4 h-4 text-gray-400" />
-            <span>Watchlist</span>
+            <span>My List</span>
             {watchlistCount > 0 && (
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-wm-accent text-[9px] font-bold text-white">
+              <span className="flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white shadow-[0_0_10px_rgba(229,9,20,0.7)]">
                 {watchlistCount}
               </span>
             )}
           </button>
 
+          {/* AI engine settings */}
+          {onOpenAISettings && (
+            <button
+              id="nav-btn-ai"
+              onClick={onOpenAISettings}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 hover:border-red-500/60 text-xs font-semibold text-gray-300 hover:text-white transition-colors max-w-[180px]"
+              title="Choose the AI engine (free AI, your own API key, or none)"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-red-500 shrink-0" />
+              <span className="truncate">{aiLabel || 'AI engine'}</span>
+            </button>
+          )}
+
+          {/* Profile Avatar Pill Button */}
           <button
             id="nav-btn-profile"
             onClick={() => handleNavClick('profile')}
-            className={`flex items-center gap-2 transition-colors py-1 ${
+            className={`flex items-center gap-2.5 transition-all py-1 pl-2 pr-1 cursor-pointer group ${
               currentView === 'profile'
-                ? 'text-white font-bold border-b-2 border-wm-accent'
+                ? 'text-white font-extrabold'
                 : 'text-gray-300 hover:text-white'
             }`}
+            title="Open CineTaste Passport Profile"
           >
-            <User className="w-4 h-4 text-gray-400" />
-            <span>My Taste</span>
+            <span className="text-xs font-medium text-gray-300 group-hover:text-white font-heading">Profile</span>
+            <div className={`w-8 h-8 rounded-full overflow-hidden border-2 transition-all duration-300 flex items-center justify-center ${
+              currentView === 'profile' 
+                ? 'border-red-500 shadow-[0_0_15px_rgba(229,9,20,0.8)] scale-105' 
+                : 'border-red-500/60 group-hover:border-red-500 group-hover:shadow-[0_0_15px_rgba(229,9,20,0.5)]'
+            }`}>
+              <img 
+                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&q=80" 
+                alt="Profile" 
+                className="w-full h-full object-cover"
+              />
+            </div>
           </button>
         </nav>
 
@@ -294,6 +321,19 @@ export default function Navbar({ currentView, onViewChange, watchlistCount, onSe
               <span>My Taste</span>
             </div>
           </button>
+
+          {onOpenAISettings && (
+            <button
+              onClick={() => { setMobileMenuOpen(false); onOpenAISettings(); }}
+              className="flex items-center justify-between w-full px-4 py-3 rounded-lg text-sm font-semibold text-gray-300 hover:bg-wm-card-hover"
+            >
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                <span>AI engine</span>
+              </div>
+              <span className="text-xs text-gray-500 truncate max-w-[50%]">{aiLabel}</span>
+            </button>
+          )}
         </div>
       )}
     </header>

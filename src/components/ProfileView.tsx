@@ -84,109 +84,121 @@ export default function ProfileView({
     .slice(0, 3)
     .map(x => x[0]);
 
+  const defaultArchetype = "The Cerebral Noir Minimalist";
+  const defaultTagline = "Film is a mirror reflecting the shadows of the soul.";
+  const defaultTropes = [
+    "Existential Dread",
+    "Unreliable Narrator",
+    "Atmospheric Crime",
+    "Moral Ambiguity",
+    "Dystopian Worlds",
+    "Minimalist Dialogue",
+  ];
+
   return (
-    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-10" id="taste-profile-view">
-      {/* Main 2-Column Grid Stage */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        {/* LEFT 8 COLUMNS: CineTaste Passport & Library */}
-        <div className="lg:col-span-8 space-y-10">
-          {/* 1. Header Profile Summary */}
-          <div className="glass-panel border border-white/15 p-6 md:p-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden">
-            <div className="flex items-center space-x-5">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-600 to-rose-600 text-white flex items-center justify-center flex-shrink-0 shadow-[0_0_30px_-5px_rgba(229,9,20,0.6)] border border-white/20">
-                <User className="w-8 h-8 fill-white" />
-              </div>
-              <div className="text-center md:text-left space-y-1">
-                <div className="flex items-center justify-center md:justify-start space-x-2">
-                  <h2 className="text-2xl font-black text-white font-heading">Your CineTaste Passport</h2>
-                  <span className="bg-red-500/20 text-red-400 border border-red-500/40 text-[10px] font-mono px-2.5 py-0.5 rounded-full font-bold uppercase">
-                    Active Profile
-                  </span>
+    <div className="max-w-[1550px] mx-auto px-4 sm:px-6 lg:px-12 py-8 space-y-10" id="taste-profile-view">
+      
+      {/* Page Title */}
+      <div className="text-center space-y-1">
+        <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight font-heading">
+          CineTaste Passport
+        </h1>
+        <p className="text-gray-400 text-xs sm:text-sm font-sans">
+          Your evolving cinematic identity, Taste DNA, and personalized recommendation seeds
+        </p>
+      </div>
+
+      {/* Main Centered Passport Identity Card */}
+      <div className="max-w-4xl mx-auto glass-panel rounded-3xl p-6 sm:p-8 md:p-10 border border-red-500/50 shadow-[0_0_70px_-10px_rgba(229,9,20,0.4)] relative overflow-hidden backdrop-blur-2xl">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+          
+          {/* Left Column: Avatar & User Identity */}
+          <div className="md:col-span-4 flex flex-col items-center text-center space-y-4 md:border-r md:border-white/10 md:pr-6">
+            <div className="relative">
+              {/* Lens / Camera circular avatar with glowing red ring */}
+              <div className="w-28 h-28 rounded-3xl overflow-hidden border-2 border-red-500 shadow-[0_0_30px_rgba(229,9,20,0.6)] p-1 bg-black/60 relative">
+                <img 
+                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&q=80" 
+                  alt="Avatar"
+                  className="w-full h-full object-cover rounded-2xl filter brightness-95"
+                />
+                {/* Netflix / Film Tag */}
+                <div className="absolute bottom-2 right-2 bg-red-600 text-white font-black text-[10px] w-5 h-5 rounded flex items-center justify-center shadow">
+                  W
                 </div>
-                <p className="text-gray-300 text-xs sm:text-sm font-sans leading-relaxed">
-                  WatchMatch continuously learns from your likes, dislikes, and viewing history to craft hyper-personalized recommendations.
-                </p>
               </div>
             </div>
 
-            <button
-              id="btn-clear-profile"
-              onClick={onResetTasteProfile}
-              className="flex items-center space-x-2 text-xs text-gray-300 hover:text-red-400 glass-card border border-white/15 hover:border-red-500/40 px-4 py-3 rounded-xl font-bold transition duration-200 shrink-0 cursor-pointer font-mono"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Clear Taste History</span>
-            </button>
-          </div>
-
-
-      {/* 2. AI CINEPHILE PERSONA IDENTITY CARD */}
-      <div className="glass-panel border border-white/15 rounded-3xl p-6 md:p-8 space-y-6 shadow-[0_0_80px_-15px_rgba(229,9,20,0.3)] relative overflow-hidden backdrop-blur-2xl">
-        <div className="absolute -top-24 -right-24 w-72 h-72 bg-red-600/15 rounded-full blur-3xl pointer-events-none"></div>
-
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
-          <div className="flex items-center space-x-3.5">
-            <div className="p-3.5 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-500 shadow-md">
-              <Brain className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="text-[10px] bg-gradient-to-r from-red-600 to-rose-600 text-white font-mono font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow">
-                  AI Cinephile Persona
-                </span>
-                {persona && (
-                  <span className="text-[10px] text-gray-400 font-mono">
-                    Updated {new Date(persona.generatedAt).toLocaleDateString()}
-                  </span>
-                )}
-              </div>
-              <h3 className="text-2xl font-black text-white tracking-tight mt-1 font-heading">
-                {persona ? persona.archetype : 'Your Cinephile Identity'}
+            <div className="space-y-0.5">
+              <h3 className="text-xl font-black text-white font-heading">
+                Jane Doe
               </h3>
+              <span className="text-xs text-gray-400 font-mono block">
+                Member since 2023
+              </span>
+            </div>
+
+            {/* Quick Action Buttons */}
+            <div className="flex items-center space-x-2 pt-1">
+              <button 
+                type="button"
+                onClick={handlePersonaClick}
+                disabled={isGeneratingPersona}
+                className="w-9 h-9 rounded-full bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/50 text-gray-300 hover:text-white flex items-center justify-center transition cursor-pointer"
+                title="Refresh Taste Persona"
+              >
+                <Sparkles className={`w-4 h-4 ${isGeneratingPersona ? 'animate-spin text-red-400' : ''}`} />
+              </button>
+              <button 
+                type="button"
+                onClick={onResetTasteProfile}
+                className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white flex items-center justify-center transition cursor-pointer"
+                title="Reset Taste History"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
-          <button
-            onClick={handlePersonaClick}
-            disabled={isGeneratingPersona}
-            className="flex items-center space-x-2 bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 hover:scale-[1.02] text-white font-extrabold text-xs px-6 py-3 rounded-2xl shadow-[0_0_25px_-5px_rgba(229,9,20,0.5)] transition duration-200 disabled:opacity-50 shrink-0 cursor-pointer"
-          >
-            <Sparkles className={`w-4 h-4 ${isGeneratingPersona ? 'animate-spin' : ''}`} />
-            <span>{isGeneratingPersona ? 'Synthesizing Taste Persona...' : persona ? 'Refresh AI Persona' : 'Generate AI Persona'}</span>
-          </button>
-        </div>
+          {/* Right Column: Archetype, Taste DNA & Tropes */}
+          <div className="md:col-span-8 space-y-6">
+            
+            {/* Header: Archetype badge & title */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400 font-bold block">
+                Archetype badge
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-white font-heading tracking-tight">
+                {persona?.archetype || defaultArchetype}
+              </h2>
+              <p className="text-amber-300 text-xs sm:text-sm italic font-sans">
+                "{persona?.tagline || defaultTagline}"
+              </p>
+            </div>
 
-        {persona ? (
-          <div className="space-y-6">
-            {/* Tagline */}
-            <p className="text-amber-300 font-medium text-sm sm:text-base italic border-l-2 border-amber-500 pl-4 py-0.5 font-sans bg-amber-500/5 rounded-r-xl">
-              "{persona.tagline}"
-            </p>
-
-            {/* Taste DNA Metrics Bars */}
-            <div className="space-y-4 bg-black/40 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
-              <h4 className="text-xs font-bold text-gray-300 uppercase font-mono tracking-wider flex items-center space-x-2">
-                <Zap className="w-4 h-4 text-red-500" />
-                <span>Cinematic Taste DNA Breakdown</span>
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 pt-1 font-sans">
+            {/* 5-Dimension Taste DNA Breakdown with Exact Colors */}
+            <div className="space-y-3 font-sans">
+              <span className="text-[11px] font-mono font-bold text-gray-400 uppercase tracking-wider block">
+                5-Dimension Taste DNA
+              </span>
+              
+              <div className="space-y-2.5">
                 {[
-                  { label: 'Mind-Bending & Complexity', val: persona.tasteDNA?.mindBending || 75, color: 'from-indigo-600 to-purple-600' },
-                  { label: 'Pacing & Intensity', val: persona.tasteDNA?.pacing || 70, color: 'from-amber-500 to-orange-500' },
-                  { label: 'Gritty / Dark Realism', val: persona.tasteDNA?.darkRealism || 65, color: 'from-red-600 to-rose-600' },
-                  { label: 'Emotional & Character Depth', val: persona.tasteDNA?.emotionalDepth || 80, color: 'from-emerald-500 to-teal-500' },
-                  { label: 'Visual Spectacle', val: persona.tasteDNA?.spectacle || 70, color: 'from-cyan-500 to-blue-500' },
-                ].map(item => (
-                  <div key={item.label} className="space-y-1.5">
+                  { label: "Mind-Bending", val: persona?.tasteDNA?.mindBending || 90, barGrad: "from-cyan-400 to-blue-500", glow: "rgba(6,182,212,0.6)" },
+                  { label: "Pacing", val: persona?.tasteDNA?.pacing || 70, barGrad: "from-emerald-400 to-green-500", glow: "rgba(16,185,129,0.6)" },
+                  { label: "Gritty Realism", val: persona?.tasteDNA?.darkRealism || 85, barGrad: "from-amber-400 to-yellow-500", glow: "rgba(245,158,11,0.6)" },
+                  { label: "Emotional Depth", val: persona?.tasteDNA?.emotionalDepth || 75, barGrad: "from-orange-400 to-rose-500", glow: "rgba(244,63,94,0.6)" },
+                  { label: "Visual Spectacle", val: persona?.tasteDNA?.spectacle || 80, barGrad: "from-red-500 to-rose-600", glow: "rgba(229,9,20,0.6)" },
+                ].map((item, idx) => (
+                  <div key={idx} className="space-y-1">
                     <div className="flex justify-between text-xs font-semibold">
                       <span className="text-gray-300">{item.label}</span>
-                      <span className="text-gray-400 font-mono font-bold">{item.val}%</span>
+                      <span className="text-gray-200 font-mono font-bold">{item.val}%</span>
                     </div>
-                    <div className="w-full bg-white/10 h-2.5 rounded-full overflow-hidden p-0.5 border border-white/10">
-                      <div
-                        className={`bg-gradient-to-r ${item.color} h-full rounded-full transition-all duration-700 shadow`}
-                        style={{ width: `${item.val}%` }}
+                    <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full bg-gradient-to-r ${item.barGrad} rounded-full transition-all duration-700`}
+                        style={{ width: `${item.val}%`, boxShadow: `0 0 10px ${item.glow}` }}
                       ></div>
                     </div>
                   </div>
@@ -194,556 +206,176 @@ export default function ProfileView({
               </div>
             </div>
 
-            {/* Signature Tropes */}
-            {persona.signatureTropes?.length > 0 && (
-              <div className="space-y-2.5">
-                <span className="text-xs font-bold font-mono text-gray-400 uppercase tracking-wider block">Signature Narrative Tropes</span>
-                <div className="flex flex-wrap gap-2">
-                  {persona.signatureTropes.map(trope => (
-                    <span key={trope} className="bg-white/5 border border-white/10 text-gray-200 text-xs font-medium px-3.5 py-1.5 rounded-xl flex items-center space-x-1.5 backdrop-blur-md">
-                      <Award className="w-3.5 h-3.5 text-amber-400" />
-                      <span>{trope}</span>
-                    </span>
-                  ))}
-                </div>
+            {/* Signature Trope Tags */}
+            <div className="space-y-2 pt-1">
+              <span className="text-[11px] font-mono font-bold text-gray-400 uppercase tracking-wider block">
+                Signature Trope Tags
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {(persona?.signatureTropes?.length ? persona.signatureTropes : defaultTropes).map((trope, i) => (
+                  <span 
+                    key={i} 
+                    className="border border-red-500/50 bg-red-950/30 text-gray-200 text-[11px] font-semibold px-3 py-1 rounded-full shadow-sm"
+                  >
+                    {trope}
+                  </span>
+                ))}
               </div>
-            )}
-
-            {/* AI Summary */}
-            <div className="glass-card border border-white/10 rounded-2xl p-6 space-y-2 text-sm text-gray-300 leading-relaxed font-sans">
-              <span className="text-xs font-bold font-mono text-red-400 uppercase tracking-wider block">AI Cinephile Personality Analysis</span>
-              <p className="whitespace-pre-line leading-relaxed">{persona.aiSummary}</p>
             </div>
-
-            {/* Persona Recommended Seeds */}
-            {(() => {
-              const rawSeeds = persona.recommendedSeeds || [];
-              
-              // Unwatched curated movies pool matching favorite genres or high ratings
-              const unwatchedCuratedPool = curatedMovies.filter(m => !watchedIds.includes(m.id));
-
-              // All possible seed candidates
-              const allSeedTitles = [
-                ...rawSeeds.filter(seedTitle => {
-                  const found = curatedMovies.find(m => m.title.toLowerCase() === seedTitle.toLowerCase() || m.id.toLowerCase() === seedTitle.toLowerCase());
-                  return !found || !watchedIds.includes(found.id);
-                }),
-                ...unwatchedCuratedPool.map(m => m.title)
-              ];
-
-              // Remove duplicates
-              const uniqueSeedTitles = Array.from(new Set(allSeedTitles));
-              if (uniqueSeedTitles.length === 0) return null;
-
-              // Slice 5 seeds based on seedOffset
-              const slicedIndex = seedOffset % Math.max(1, uniqueSeedTitles.length);
-              const displaySeeds = uniqueSeedTitles
-                .slice(slicedIndex, slicedIndex + 5)
-                .concat(uniqueSeedTitles.slice(0, Math.max(0, 5 - (uniqueSeedTitles.length - slicedIndex))))
-                .slice(0, 5);
-
-              return (
-                <div className="space-y-3 pt-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold font-mono text-gray-400 uppercase tracking-wider flex items-center space-x-2">
-                      <Compass className="w-4 h-4 text-red-500" />
-                      <span>Tailored Unwatched Seeds For Your Persona</span>
-                    </span>
-
-                    <button
-                      type="button"
-                      onClick={() => setSeedOffset(prev => prev + 5)}
-                      className="flex items-center space-x-1.5 text-xs text-red-400 hover:text-white glass-card border border-white/10 hover:border-red-500/40 px-3 py-1.5 rounded-xl font-mono font-bold transition duration-200 cursor-pointer shadow"
-                      title="Generate new recommendation seeds"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5" />
-                      <span>Refresh Seeds</span>
-                    </button>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2.5">
-                    {displaySeeds.map(seedTitle => {
-                      const matchedMovie = curatedMovies.find(m => m.title.toLowerCase() === seedTitle.toLowerCase() || m.id.toLowerCase() === seedTitle.toLowerCase()) || {
-                        id: `seed_${seedTitle.toLowerCase().replace(/\s+/g, '_')}`,
-                        title: seedTitle,
-                        year: 2022,
-                        contentType: 'movie' as const,
-                        rating: 8.5,
-                        voteCount: 150000,
-                        runtime: 125,
-                        genres: favoriteGenres.length ? favoriteGenres : ['Drama', 'Thriller'],
-                        moods: ['mind-bending', 'engaging'],
-                        pace: 'medium' as const,
-                        languages: ['English'],
-                        countries: ['United States'],
-                        synopsis: `Recommended cinephile title matching your AI Cinephile Persona archetype: ${persona.archetype}.`,
-                        posterUrl: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500&q=80',
-                        backdropUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1200&q=80',
-                        platforms: ['Netflix', 'Prime Video', 'Apple TV+']
-                      };
-
-                      return (
-                        <button
-                          key={seedTitle}
-                          type="button"
-                          onClick={() => onMovieClick(matchedMovie)}
-                          className="bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/50 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition duration-200 cursor-pointer flex items-center space-x-2 group shadow-md"
-                          title={`Click to view details for ${seedTitle}`}
-                        >
-                          <Film className="w-3.5 h-3.5 text-red-400 group-hover:scale-110 transition duration-200" />
-                          <span>{seedTitle}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })()}
 
           </div>
-        ) : (
-          <div className="text-center py-8 bg-black/40 border border-dashed border-white/15 rounded-2xl space-y-4">
-            <Brain className="w-12 h-12 text-gray-500 mx-auto" />
-            <div className="space-y-1">
-              <h4 className="text-white font-extrabold text-base font-heading">Generate your custom Cinephile Persona Card</h4>
-              <p className="text-gray-400 text-xs sm:text-sm max-w-md mx-auto leading-relaxed font-sans">
-                WatchMatch AI will analyze your watch history, liked genres, and viewing habits to synthesize your custom Cinephile Passport.
-              </p>
-            </div>
-            <button
-              onClick={handlePersonaClick}
-              disabled={isGeneratingPersona}
-              className="bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 hover:scale-[1.02] text-white font-extrabold text-xs px-6 py-3 rounded-2xl transition duration-200 cursor-pointer shadow-[0_0_25px_-5px_rgba(229,9,20,0.5)]"
+        </div>
+      </div>
+
+      {/* PERSONALIZED SEED MOVIES Carousel Section */}
+      <section className="space-y-4 max-w-5xl mx-auto pt-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg sm:text-xl font-extrabold text-white font-heading uppercase tracking-wider">
+            PERSONALIZED SEED MOVIES
+          </h2>
+          <div className="flex items-center space-x-2">
+            <button 
+              type="button" 
+              onClick={() => setSeedOffset(prev => Math.max(0, prev - 1))}
+              className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition border border-white/10 cursor-pointer"
             >
-              {isGeneratingPersona ? 'Analyzing Your Taste...' : 'Build AI Persona Card'}
+              ‹
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setSeedOffset(prev => prev + 1)}
+              className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 text-white flex items-center justify-center transition border border-white/10 cursor-pointer"
+            >
+              ›
             </button>
           </div>
-        )}
-      </div>
-
-      {/* 3. Analytical Preferences Insights */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Fav Genres */}
-        <div className="glass-card border border-white/10 p-6 rounded-2xl space-y-3">
-          <div className="flex items-center space-x-2">
-            <Flame className="w-5 h-5 text-red-500" />
-            <h3 className="font-extrabold text-white text-base font-heading">Top Preferred Genres</h3>
-          </div>
-          {favoriteGenres.length > 0 ? (
-            <div className="flex flex-wrap gap-2 pt-1">
-              {favoriteGenres.map(g => (
-                <span key={g} className="bg-red-500/15 border border-red-500/30 text-red-300 font-mono font-bold text-xs px-4 py-1.5 rounded-xl uppercase">
-                  {g}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-400 text-xs font-sans">Like titles during movie scouting to discover your favorite genres.</p>
-          )}
         </div>
 
-        {/* Fav Moods */}
-        <div className="glass-card border border-white/10 p-6 rounded-2xl space-y-3">
-          <div className="flex items-center space-x-2">
-            <Sliders className="w-5 h-5 text-amber-500" />
-            <h3 className="font-extrabold text-white text-base font-heading">Favorite Story Vibes</h3>
-          </div>
-          {favoriteMoods.length > 0 ? (
-            <div className="flex flex-wrap gap-2 pt-1">
-              {favoriteMoods.map(m => (
-                <span key={m} className="bg-amber-500/15 border border-amber-500/30 text-amber-300 font-mono font-bold text-xs px-4 py-1.5 rounded-xl uppercase">
-                  {m}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-400 text-xs font-sans">Interact with recommendations to map your atmospheric vibes.</p>
-          )}
-        </div>
-      </div>
+        {/* Carousel Row */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+          {[
+            { title: "Memento", year: 2000, rating: 8.4, img: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&q=80" },
+            { title: "Blade Runner 2049", year: 2017, rating: 8.0, img: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=300&q=80" },
+            { title: "Drive", year: 2011, rating: 7.8, img: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=300&q=80" },
+            { title: "Prisoners", year: 2013, rating: 8.2, img: "https://images.unsplash.com/photo-1485846234645-a62644f84728?w=300&q=80" },
+            { title: "Arrival", year: 2016, rating: 7.9, img: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=300&q=80" },
+            { title: "Oldboy", year: 2003, rating: 8.3, img: "https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=300&q=80" },
+          ].map((seed, idx) => {
+            const actualMovie = curatedMovies.find(m => m.title.toLowerCase().includes(seed.title.toLowerCase()));
+            const posterSrc = actualMovie?.posterUrl ? getCleanImageUrl(actualMovie.posterUrl, 'poster') : seed.img;
 
-      {/* 4. WATCH STATUS FILTER TOGGLE CONTROL */}
-      <div className="glass-panel border border-white/10 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500">
-            <Filter className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="font-extrabold text-white text-sm font-heading">Library Watch Filter</h3>
-            <p className="text-xs text-gray-400 font-sans">Filter your saved films by viewing status</p>
-          </div>
-        </div>
-
-        <div className="flex items-center bg-black/40 p-1.5 rounded-xl border border-white/10 gap-1 w-full sm:w-auto justify-center backdrop-blur-md">
-          <button
-            id="filter-btn-all"
-            onClick={() => setStatusFilter('all')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 ${
-              statusFilter === 'all'
-                ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-md'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            All Saved ({watchlistMovies.length + watchedMovies.length})
-          </button>
-          <button
-            id="filter-btn-unwatched"
-            onClick={() => setStatusFilter('unwatched')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 flex items-center space-x-1.5 ${
-              statusFilter === 'unwatched'
-                ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-md'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            <Bookmark className="w-3.5 h-3.5" />
-            <span>Unwatched ({unwatchedWatchlistMovies.length})</span>
-          </button>
-          <button
-            id="filter-btn-watched"
-            onClick={() => setStatusFilter('watched')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 flex items-center space-x-1.5 ${
-              statusFilter === 'watched'
-                ? 'bg-emerald-600 text-white shadow-md'
-                : 'text-gray-400 hover:text-white'
-            }`}
-          >
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>Watched ({watchedMovies.length})</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 5. WATCHED HISTORY SECTOR */}
-      {(statusFilter === 'all' || statusFilter === 'watched') && (
-        <div className="space-y-4" id="watched-history-sector">
-          <div className="flex items-center space-x-2 border-b border-white/10 pb-3">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-            <h3 className="font-extrabold text-lg text-white font-heading">Already Watched History</h3>
-            <span className="text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-mono px-3 py-0.5 rounded-full font-bold">
-              {watchedMovies.length} Marked
-            </span>
-          </div>
-
-          {watchedMovies.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {watchedMovies.map(movie => (
-                <div 
-                  key={movie.id} 
-                  className="glass-card border border-white/10 hover:border-emerald-500/40 rounded-2xl p-4 flex items-center justify-between gap-4 transition duration-200 group shadow-lg"
-                >
-                  <div 
-                    onClick={() => onMovieClick(movie)}
-                    className="flex items-center space-x-3.5 cursor-pointer flex-1 min-w-0"
-                  >
-                    <img 
-                      src={getCleanImageUrl(movie.posterUrl, 'poster')} 
-                      alt={movie.title}
-                      referrerPolicy="no-referrer"
-                      className="w-12 h-16 object-cover rounded-xl flex-shrink-0 border border-white/15 group-hover:scale-105 transition"
-                      onError={(e) => handleImageLoadError(e, movie.backdropUrl)}
-                    />
-                    <div className="min-w-0">
-                      <span className="font-extrabold text-white text-sm block group-hover:text-emerald-400 truncate transition font-heading flex items-center space-x-1">
-                        <span>{movie.title}</span>
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 inline flex-shrink-0" />
-                      </span>
-                      <span className="text-gray-400 text-xs font-mono block mt-0.5">
-                        {movie.year} · ★{movie.rating} · <span className="capitalize text-gray-300">{movie.contentType}</span>
-                      </span>
-                    </div>
+            return (
+              <div 
+                key={idx}
+                onClick={() => {
+                  if (actualMovie) onMovieClick(actualMovie);
+                }}
+                className="glass-card rounded-2xl p-2 border border-white/10 hover:border-red-500/60 transition duration-300 hover:scale-105 cursor-pointer group shadow-lg"
+              >
+                <div className="h-44 rounded-xl overflow-hidden bg-black/60 relative mb-2">
+                  <img 
+                    src={posterSrc} 
+                    alt={seed.title} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition"
+                    onError={(e) => handleImageLoadError(e)}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                  <div className="absolute bottom-2 left-2 right-2">
+                    <span className="text-[11px] font-black text-white block truncate font-heading group-hover:text-red-400 transition">
+                      {seed.title}
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-mono block">
+                      ★ {seed.rating} · {seed.year}
+                    </span>
                   </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
-                  <div className="flex items-center space-x-1">
+      {/* Watched & Watchlist Tabs / Library Grid */}
+      <div className="max-w-5xl mx-auto space-y-6 pt-6 border-t border-white/10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <Film className="w-5 h-5 text-red-500" />
+            <h2 className="text-xl font-bold text-white font-heading">Your Saved Library</h2>
+          </div>
+
+          {/* Filter tabs */}
+          <div className="flex bg-white/5 border border-white/10 p-1 rounded-xl text-xs font-semibold">
+            <button
+              onClick={() => setStatusFilter('all')}
+              className={`px-3 py-1.5 rounded-lg transition ${statusFilter === 'all' ? 'bg-red-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}
+            >
+              All ({watchlistMovies.length})
+            </button>
+            <button
+              onClick={() => setStatusFilter('unwatched')}
+              className={`px-3 py-1.5 rounded-lg transition ${statusFilter === 'unwatched' ? 'bg-red-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}
+            >
+              Unwatched ({unwatchedWatchlistMovies.length})
+            </button>
+            <button
+              onClick={() => setStatusFilter('watched')}
+              className={`px-3 py-1.5 rounded-lg transition ${statusFilter === 'watched' ? 'bg-red-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}
+            >
+              Watched ({watchedMovies.length})
+            </button>
+          </div>
+        </div>
+
+        {/* Library Items Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {(statusFilter === 'watched' ? watchedMovies : statusFilter === 'unwatched' ? unwatchedWatchlistMovies : watchlistMovies).map(movie => {
+            const isWatched = watchedIds.includes(movie.id);
+            return (
+              <div 
+                key={movie.id}
+                className="glass-card p-3 rounded-2xl border border-white/10 flex items-center space-x-3 hover:border-red-500/40 transition group"
+              >
+                <img 
+                  src={getCleanImageUrl(movie.posterUrl, 'poster')} 
+                  alt={movie.title}
+                  className="w-14 h-20 rounded-xl object-cover flex-shrink-0"
+                  onError={(e) => handleImageLoadError(e)}
+                />
+                <div className="flex-1 min-w-0">
+                  <h4 
+                    onClick={() => onMovieClick(movie)}
+                    className="text-sm font-bold text-white group-hover:text-red-400 cursor-pointer truncate font-heading"
+                  >
+                    {movie.title}
+                  </h4>
+                  <span className="text-xs text-gray-400 font-mono block">
+                    {movie.year} · ★ {movie.rating}
+                  </span>
+                  <div className="flex items-center space-x-2 pt-2">
                     {onToggleWatched && (
                       <button
                         onClick={() => onToggleWatched(movie.id)}
-                        className="text-emerald-400 hover:text-red-400 p-2 hover:bg-white/10 rounded-xl transition text-xs font-bold font-mono"
-                        title="Unmark as watched"
+                        className={`text-[10px] font-bold px-2 py-1 rounded-lg border flex items-center space-x-1 cursor-pointer ${
+                          isWatched ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-white/5 text-gray-400 border-white/10'
+                        }`}
                       >
-                        Unmark
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>{isWatched ? 'Watched' : 'Mark'}</span>
                       </button>
                     )}
-                    {onRemoveFromWatched && (
-                      <button
-                        onClick={() => onRemoveFromWatched(movie.id)}
-                        className="text-gray-400 hover:text-red-400 p-2 hover:bg-white/10 rounded-xl transition"
-                        title="Remove from history"
-                      >
-                        <Trash className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 bg-black/40 border border-dashed border-white/10 rounded-2xl space-y-2">
-              <CheckCircle2 className="w-8 h-8 text-gray-600 mx-auto" />
-              <p className="text-gray-400 text-xs font-sans">No titles marked watched yet. Mark movies watched from search results or details modal!</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 6. WATCHLIST SECTOR */}
-      {(statusFilter === 'all' || statusFilter === 'unwatched') && (
-        <div className="space-y-4" id="watchlist-sector">
-          <div className="flex items-center space-x-2 border-b border-white/10 pb-3">
-            <Bookmark className="w-5 h-5 text-red-500" />
-            <h3 className="font-extrabold text-lg text-white font-heading">
-              {statusFilter === 'unwatched' ? 'Unwatched Watchlist' : 'Your Curated Watchlist'}
-            </h3>
-            <span className="text-xs bg-white/5 border border-white/10 text-gray-300 font-mono px-3 py-0.5 rounded-full font-bold">
-              {statusFilter === 'unwatched' ? unwatchedWatchlistMovies.length : watchlistMovies.length} Titles
-            </span>
-          </div>
-
-          {(statusFilter === 'unwatched' ? unwatchedWatchlistMovies : watchlistMovies).length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {(statusFilter === 'unwatched' ? unwatchedWatchlistMovies : watchlistMovies).map(movie => {
-                const isWatched = watchedIds.includes(movie.id);
-
-                return (
-                  <div 
-                    key={movie.id} 
-                    className="glass-card border border-white/10 hover:border-red-500/40 rounded-2xl p-4 flex items-center justify-between gap-4 transition duration-200 group shadow-lg"
-                  >
-                    <div 
-                      onClick={() => onMovieClick(movie)}
-                      className="flex items-center space-x-3.5 cursor-pointer flex-1 min-w-0"
+                    <button
+                      onClick={() => onRemoveFromWatchlist(movie.id)}
+                      className="text-gray-400 hover:text-red-400 text-[10px] px-2 py-1 bg-white/5 rounded-lg border border-white/10 cursor-pointer"
                     >
-                      <img 
-                        src={getCleanImageUrl(movie.posterUrl, 'poster')} 
-                        alt={movie.title}
-                        referrerPolicy="no-referrer"
-                        className="w-12 h-16 object-cover rounded-xl flex-shrink-0 border border-white/15 group-hover:scale-105 transition"
-                        onError={(e) => handleImageLoadError(e, movie.backdropUrl)}
-                      />
-                      <div className="min-w-0">
-                        <span className="font-extrabold text-white text-sm block group-hover:text-red-400 truncate transition font-heading flex items-center space-x-1">
-                          <span>{movie.title}</span>
-                          {isWatched && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 inline flex-shrink-0" />}
-                        </span>
-                        <span className="text-gray-400 text-xs font-mono block mt-0.5">
-                          {movie.year} · ★{movie.rating} · <span className="capitalize text-gray-300">{movie.contentType}</span>
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-1.5">
-                      {onToggleWatched && (
-                        <button
-                          onClick={() => onToggleWatched(movie.id)}
-                          className={`text-xs font-bold px-3 py-1.5 rounded-xl transition duration-200 border ${
-                            isWatched
-                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                              : 'bg-white/5 text-gray-300 border-white/10 hover:text-white hover:border-white/20'
-                          }`}
-                          title={isWatched ? 'Mark unwatched' : 'Mark watched'}
-                        >
-                          {isWatched ? 'Watched' : 'Mark Watched'}
-                        </button>
-                      )}
-
-                      <button
-                        onClick={() => onRemoveFromWatchlist(movie.id)}
-                        className="text-gray-400 hover:text-red-400 p-2 hover:bg-white/10 rounded-xl transition"
-                        title="Remove from watchlist"
-                      >
-                        <Trash className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-10 bg-black/40 border border-dashed border-white/10 rounded-2xl space-y-2">
-              <Bookmark className="w-8 h-8 text-gray-600 mx-auto" />
-              <p className="text-gray-400 text-xs font-sans">
-                {statusFilter === 'unwatched'
-                  ? 'All items on your watchlist have been watched!'
-                  : 'Your watchlist is currently empty. Add titles during discovery!'}
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* 7. LIKED TITLES SECTOR */}
-      <div className="space-y-4">
-        <div className="flex items-center space-x-2 border-b border-white/10 pb-3">
-          <Heart className="w-5 h-5 text-red-500 fill-red-500/20" />
-          <h3 className="font-extrabold text-lg text-white font-heading">Liked Recommendations</h3>
-          <span className="text-xs bg-white/5 border border-white/10 text-gray-300 font-mono px-3 py-0.5 rounded-full font-bold">
-            {likedMovies.length} Titles
-          </span>
-        </div>
-
-        {likedMovies.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {likedMovies.map(movie => (
-              <div 
-                key={movie.id} 
-                className="glass-card border border-white/10 rounded-2xl p-4 flex items-center justify-between gap-4 shadow-lg hover:border-red-500/30 transition duration-200 group"
-              >
-                <div 
-                  onClick={() => onMovieClick(movie)}
-                  className="flex items-center space-x-3.5 cursor-pointer flex-1 min-w-0"
-                >
-                  <img 
-                    src={getCleanImageUrl(movie.posterUrl, 'poster')} 
-                    alt={movie.title}
-                    referrerPolicy="no-referrer"
-                    className="w-12 h-16 object-cover rounded-xl flex-shrink-0 border border-white/15 group-hover:scale-105 transition"
-                    onError={(e) => handleImageLoadError(e, movie.backdropUrl)}
-                  />
-                  <div className="min-w-0">
-                    <span className="font-extrabold text-white text-sm block truncate font-heading group-hover:text-red-400 transition">
-                      {movie.title}
-                    </span>
-                    <span className="text-gray-400 text-xs font-mono block mt-0.5">
-                      {movie.year} · ★{movie.rating}
-                    </span>
+                      Remove
+                    </button>
                   </div>
                 </div>
-
-                <button
-                  onClick={() => onRemoveFromLikes(movie.id)}
-                  className="text-gray-400 hover:text-red-400 p-2 hover:bg-white/10 rounded-xl transition"
-                  title="Unlike"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 bg-black/40 border border-dashed border-white/10 rounded-2xl">
-            <p className="text-gray-400 text-xs font-sans">Like titles during movie scouting to build your preference DNA.</p>
-          </div>
-        )}
+            );
+          })}
+        </div>
       </div>
-
-      {/* 8. DISLIKED SECTOR */}
-      {dislikedMovies.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2 border-b border-white/10 pb-3">
-            <Trash className="w-5 h-5 text-gray-400" />
-            <h3 className="font-extrabold text-lg text-white font-heading">Dismissed / Not Interested</h3>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {dislikedMovies.map(movie => (
-              <div 
-                key={movie.id} 
-                className="glass-card border border-white/10 rounded-2xl p-4 flex items-center justify-between gap-4 shadow"
-              >
-                <div className="flex items-center space-x-3.5 flex-1 min-w-0">
-                  <div className="min-w-0">
-                    <span className="font-semibold text-gray-300 text-sm block truncate font-sans">
-                      {movie.title}
-                    </span>
-                    <span className="text-gray-400 text-xs font-mono block mt-0.5">
-                      {movie.year} · Dismissed
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => onRemoveFromDislikes(movie.id)}
-                  className="text-gray-400 hover:text-white p-2 hover:bg-white/10 rounded-xl transition"
-                  title="Remove from blocklist"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-        </div>
-
-
-
-
-
-        {/* RIGHT 4 COLUMNS: Sticky CineTaste Analytics & Insights Sidebar */}
-        <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
-          {/* Top Loved Genres */}
-          <div className="glass-panel border border-white/15 p-6 rounded-3xl space-y-4 shadow-2xl backdrop-blur-2xl">
-            <h3 className="text-sm font-black text-white font-heading uppercase tracking-wider flex items-center space-x-2">
-              <Award className="w-4 h-4 text-amber-400" />
-              <span>Top Loved Genres</span>
-            </h3>
-
-            {favoriteGenres.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {favoriteGenres.map((g, idx) => (
-                  <span 
-                    key={idx} 
-                    className="bg-gradient-to-r from-red-600 to-rose-600 text-white font-extrabold text-xs px-3.5 py-1.5 rounded-xl uppercase tracking-wider shadow-md"
-                  >
-                    {g}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-gray-400 font-sans">Like movie cards during search to populate your top genres.</p>
-            )}
-          </div>
-
-          {/* Favorite Mood Vibes */}
-          <div className="glass-panel border border-white/15 p-6 rounded-3xl space-y-4 shadow-2xl backdrop-blur-2xl">
-            <h3 className="text-sm font-black text-white font-heading uppercase tracking-wider flex items-center space-x-2">
-              <Zap className="w-4 h-4 text-rose-400" />
-              <span>Preferred Mood Vibes</span>
-            </h3>
-
-            {favoriteMoods.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {favoriteMoods.map((m, idx) => (
-                  <span 
-                    key={idx} 
-                    className="bg-white/10 text-gray-200 border border-white/15 font-bold text-xs px-3 py-1.5 rounded-xl capitalize shadow"
-                  >
-                    {m}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-gray-400 font-sans">Your preferred story vibes will automatically summarize here.</p>
-            )}
-          </div>
-
-          {/* Library Breakdown Stats */}
-          <div className="glass-panel border border-white/15 p-6 rounded-3xl space-y-4 shadow-2xl backdrop-blur-2xl">
-            <h3 className="text-sm font-black text-white font-heading uppercase tracking-wider flex items-center space-x-2">
-              <Film className="w-4 h-4 text-red-500" />
-              <span>Passport Metrics</span>
-            </h3>
-
-            <div className="space-y-3 font-mono text-xs">
-              <div className="flex justify-between items-center p-3 rounded-2xl bg-white/5 border border-white/10">
-                <span className="text-gray-300">Total Saved Watchlist</span>
-                <span className="font-bold text-white text-sm">{watchlistMovies.length}</span>
-              </div>
-              <div className="flex justify-between items-center p-3 rounded-2xl bg-white/5 border border-white/10">
-                <span className="text-gray-300">Completed Movies</span>
-                <span className="font-bold text-emerald-400 text-sm">{watchedMovies.length}</span>
-              </div>
-              <div className="flex justify-between items-center p-3 rounded-2xl bg-white/5 border border-white/10">
-                <span className="text-gray-300">Liked Titles</span>
-                <span className="font-bold text-rose-400 text-sm">{likedMovies.length}</span>
-              </div>
-            </div>
-          </div>
-
-        </div> {/* END RIGHT 4 COLUMNS */}
-
-      </div> {/* END 2-COLUMN GRID STAGE */}
     </div>
   );
-}
-
-
+}

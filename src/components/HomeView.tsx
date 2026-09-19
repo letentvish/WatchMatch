@@ -44,34 +44,46 @@ export default function HomeView({ onSearchSubmit, isLoading, onSelectMovie, tas
     }
   ];
 
+  const hashtagPills = [
+    { label: "#Noir Mystery", prompt: "A dark noir mystery series with high suspense and intricate clues." },
+    { label: "#Emotional Drama", prompt: "A deeply emotional character drama that leaves a lasting impact." },
+    { label: "#Cerebral", prompt: "A mind-bending cerebral thriller like Inception or Dark." },
+    { label: "#Gritty Thriller", prompt: "A fast-paced gritty crime thriller with zero fluff and high stakes." },
+    { label: "#Bittersweet Romance", prompt: "A bittersweet realistic romance drama like Past Lives." },
+  ];
+
   const curatedCollections = [
     {
-      title: "Mind-Bending Parallel Worlds",
-      description: "Complex puzzles, alternate realities, and stories that will keep you up reading theories.",
-      prompt: "A mind-bending, high-rated sci-fi series with lots of mystery like Dark or Severance.",
+      title: "Atmospheric Thrillers",
+      countText: "4 movie thumbs",
+      prompt: "An atmospheric psychological mystery or thriller with tension and high ratings.",
       icon: Compass,
-      gradient: "from-indigo-900 to-purple-900",
+      movieTitles: ["Dark", "Severance", "Chernobyl", "Shutter Island"],
+      gradient: "from-indigo-950 to-neutral-900",
     },
     {
-      title: "Fast-Paced Crime Thrillers",
-      description: "Pure adrenaline, smart characters, and intricate plots with zero fluff.",
-      prompt: "A fast-paced crime thriller movie under 2 hours, high intensity, no romance.",
+      title: "Heart-wrenching Dramas",
+      countText: "4 movie thumbs",
+      prompt: "A deeply moving and bittersweet emotional drama with phenomenal performances.",
       icon: Flame,
-      gradient: "from-red-900 to-orange-900",
+      movieTitles: ["Past Lives", "Manchester by the Sea", "Aftersun", "The Whale"],
+      gradient: "from-rose-950 to-neutral-900",
     },
     {
-      title: "High-Stake Survival Dramas",
-      description: "When the only goal is staying alive. Unforgiving environments and psychological trials.",
-      prompt: "A survival thriller with a satisfying ending like Squid Game or Tumbbad.",
+      title: "Hidden Gems",
+      countText: "4 movie thumbs",
+      prompt: "Under-the-radar masterpieces and mind-bending hidden gems with high critical acclaim.",
       icon: Sparkles,
-      gradient: "from-emerald-900 to-teal-900",
+      movieTitles: ["Tumbbad", "Silo", "Mr. Robot", "Coherence"],
+      gradient: "from-blue-950 to-neutral-900",
     },
     {
-      title: "Perfect Single-Night Binge",
-      description: "Limited series under 6 hours. Start after dinner, finish before midnight.",
-      prompt: "A limited series under 6 hours with a finished story and very high ratings.",
-      icon: Clock,
-      gradient: "from-blue-900 to-cyan-900",
+      title: "Critically Acclaimed Noir",
+      countText: "4 movie thumbs",
+      prompt: "A critically acclaimed crime noir or neo-noir mystery with dark aesthetics.",
+      icon: Film,
+      movieTitles: ["Drive", "Memories of Murder", "Prisoners", "Chinatown"],
+      gradient: "from-neutral-950 to-stone-900",
     },
   ];
 
@@ -82,49 +94,141 @@ export default function HomeView({ onSearchSubmit, isLoading, onSelectMovie, tas
     }
   };
 
-  // Filter out watched movies from spotlight candidates
-  const unwatchedCandidates = curatedMovies.filter(m => !watchedIds.includes(m.id));
-  const spotlightPool = unwatchedCandidates.length >= 4 ? unwatchedCandidates : curatedMovies;
+  // Helper to find movie image by title or curated match
+  const getThumbnailByTitle = (title: string): string => {
+    const found = curatedMovies.find(m => m.title.toLowerCase().includes(title.toLowerCase()));
+    if (found?.posterUrl) return getCleanImageUrl(found.posterUrl, 'poster');
+    return 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&q=80';
+  };
 
-  const startIndex = (spotlightOffset * 4) % spotlightPool.length;
-  const currentSpotlightMovies = spotlightPool
-    .slice(startIndex, startIndex + 4)
-    .concat(spotlightPool.slice(0, Math.max(0, 4 - (spotlightPool.length - startIndex))))
-    .slice(0, 4);
+  // Sample featured cards for floating hero sides
+  const leftFeature = curatedMovies.find(m => m.title.toLowerCase().includes('bear')) || curatedMovies[0];
+  const leftFeature2 = curatedMovies.find(m => m.title.toLowerCase().includes('dark')) || curatedMovies[1];
+  const rightFeature = curatedMovies.find(m => m.title.toLowerCase().includes('drive') || m.title.toLowerCase().includes('severance')) || curatedMovies[2];
+  const rightFeature2 = curatedMovies.find(m => m.title.toLowerCase().includes('succession') || m.title.toLowerCase().includes('shutter')) || curatedMovies[3];
 
   return (
-    <div className="w-full relative z-10 pb-20">
-      {/* Widescreen Hero Section */}
-      <section className="relative pt-12 sm:pt-16 pb-16 px-4 sm:px-6 lg:px-12 max-w-[1600px] mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-          
-          {/* Left 7 Columns: Hero & Search Bar */}
-          <div className="lg:col-span-7 space-y-8 text-left">
-            <div className="inline-flex items-center space-x-2 bg-red-500/10 border border-red-500/30 px-4 py-1.5 rounded-full text-red-400 font-mono text-xs font-bold uppercase tracking-wider backdrop-blur-md shadow-lg">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>AI Cinephile Scout Engine</span>
-            </div>
+    <div className="w-full relative z-10 pb-20 overflow-hidden">
+      {/* Top Ambient Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[350px] bg-red-600/15 rounded-full blur-[140px] pointer-events-none -z-10"></div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-none font-heading drop-shadow-lg">
-              <span className="text-white block">Stop endless scrolling.</span>
-              <span className="block bg-gradient-to-r from-red-500 via-rose-500 to-amber-500 bg-clip-text text-transparent mt-3">
-                Describe exact mood & vibe.
-              </span>
+      {/* Hero Section */}
+      <section className="relative pt-8 sm:pt-14 pb-12 px-4 sm:px-6 lg:px-12 max-w-[1550px] mx-auto">
+        <div className="relative">
+          
+          {/* FLOATING CARD: Left 1 */}
+          {leftFeature2 && (
+            <div 
+              onClick={() => onSelectMovie ? onSelectMovie(leftFeature2) : onSearchSubmit(leftFeature2.title)}
+              className="hidden 2xl:block absolute -left-8 top-6 w-44 rounded-2xl overflow-hidden glass-card border border-white/15 p-2 shadow-2xl -rotate-6 hover:rotate-0 hover:scale-105 transition-all duration-300 cursor-pointer z-10 group"
+            >
+              <div className="relative h-60 rounded-xl overflow-hidden bg-black/60">
+                <img 
+                  src={getCleanImageUrl(leftFeature2.posterUrl, 'poster')} 
+                  alt={leftFeature2.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition"
+                  onError={(e) => handleImageLoadError(e)}
+                />
+                <span className="absolute top-2 right-2 bg-black/70 text-gray-200 border border-white/20 text-[10px] font-mono px-2 py-0.5 rounded font-bold">
+                  S1
+                </span>
+              </div>
+              <div className="pt-2 px-1">
+                <h4 className="text-white text-xs font-bold truncate group-hover:text-red-400 font-heading">{leftFeature2.title}</h4>
+                <span className="text-[10px] text-gray-400 font-mono">★ {leftFeature2.rating} · {leftFeature2.year}</span>
+              </div>
+            </div>
+          )}
+
+          {/* FLOATING CARD: Left 2 */}
+          {leftFeature && (
+            <div 
+              onClick={() => onSelectMovie ? onSelectMovie(leftFeature) : onSearchSubmit(leftFeature.title)}
+              className="hidden xl:block absolute left-10 lg:left-14 top-28 w-44 rounded-2xl overflow-hidden glass-card border border-white/15 p-2 shadow-2xl -rotate-3 hover:rotate-0 hover:scale-105 transition-all duration-300 cursor-pointer z-10 group"
+            >
+              <div className="relative h-56 rounded-xl overflow-hidden bg-black/60">
+                <img 
+                  src={getCleanImageUrl(leftFeature.posterUrl, 'poster')} 
+                  alt={leftFeature.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition"
+                  onError={(e) => handleImageLoadError(e)}
+                />
+                <span className="absolute top-2 right-2 bg-black/70 text-gray-200 border border-white/20 text-[10px] font-mono px-2 py-0.5 rounded font-bold">
+                  {leftFeature.contentType === 'movie' ? 'Movie' : 'S1'}
+                </span>
+              </div>
+              <div className="pt-2 px-1">
+                <h4 className="text-white text-xs font-bold truncate group-hover:text-red-400 font-heading">{leftFeature.title}</h4>
+                <span className="text-[10px] text-gray-400 font-mono">★ {leftFeature.rating} · {leftFeature.year}</span>
+              </div>
+            </div>
+          )}
+
+          {/* FLOATING CARD: Right 1 */}
+          {rightFeature && (
+            <div 
+              onClick={() => onSelectMovie ? onSelectMovie(rightFeature) : onSearchSubmit(rightFeature.title)}
+              className="hidden xl:block absolute right-10 lg:right-14 top-28 w-44 rounded-2xl overflow-hidden glass-card border border-white/15 p-2 shadow-2xl rotate-3 hover:rotate-0 hover:scale-105 transition-all duration-300 cursor-pointer z-10 group"
+            >
+              <div className="relative h-56 rounded-xl overflow-hidden bg-black/60">
+                <img 
+                  src={getCleanImageUrl(rightFeature.posterUrl, 'poster')} 
+                  alt={rightFeature.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition"
+                  onError={(e) => handleImageLoadError(e)}
+                />
+                <span className="absolute top-2 right-2 bg-black/70 text-gray-200 border border-white/20 text-[10px] font-mono px-2 py-0.5 rounded font-bold">
+                  {rightFeature.contentType === 'movie' ? 'Movie' : 'S1'}
+                </span>
+              </div>
+              <div className="pt-2 px-1">
+                <h4 className="text-white text-xs font-bold truncate group-hover:text-red-400 font-heading">{rightFeature.title}</h4>
+                <span className="text-[10px] text-gray-400 font-mono">★ {rightFeature.rating} · {rightFeature.year}</span>
+              </div>
+            </div>
+          )}
+
+          {/* FLOATING CARD: Right 2 */}
+          {rightFeature2 && (
+            <div 
+              onClick={() => onSelectMovie ? onSelectMovie(rightFeature2) : onSearchSubmit(rightFeature2.title)}
+              className="hidden 2xl:block absolute -right-8 top-6 w-44 rounded-2xl overflow-hidden glass-card border border-white/15 p-2 shadow-2xl rotate-6 hover:rotate-0 hover:scale-105 transition-all duration-300 cursor-pointer z-10 group"
+            >
+              <div className="relative h-60 rounded-xl overflow-hidden bg-black/60">
+                <img 
+                  src={getCleanImageUrl(rightFeature2.posterUrl, 'poster')} 
+                  alt={rightFeature2.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition"
+                  onError={(e) => handleImageLoadError(e)}
+                />
+                <span className="absolute top-2 right-2 bg-black/70 text-gray-200 border border-white/20 text-[10px] font-mono px-2 py-0.5 rounded font-bold">
+                  S4
+                </span>
+              </div>
+              <div className="pt-2 px-1">
+                <h4 className="text-white text-xs font-bold truncate group-hover:text-red-400 font-heading">{rightFeature2.title}</h4>
+                <span className="text-[10px] text-gray-400 font-mono">★ {rightFeature2.rating} · {rightFeature2.year}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Center Main Hero Column */}
+          <div className="max-w-3xl mx-auto text-center space-y-6 pt-4 relative z-20">
+            {/* Main Headline */}
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight leading-tight font-heading uppercase text-white drop-shadow-2xl">
+              <span className="block">STOP ENDLESS SCROLLING.</span>
+              <span className="block mt-1">DESCRIBE EXACT MOOD &amp; VIBE.</span>
             </h1>
 
-            <p className="text-base sm:text-lg text-gray-300 max-w-2xl font-sans leading-relaxed">
-              Tell WatchMatch what you want to feel, avoid, and finish—and get a trusted, hyper-accurate shortlist of movies and series tailored for you.
-            </p>
-
-            {/* Search Input Area */}
-            <div className="mt-8 max-w-3xl">
+            {/* Glowing Search Box Container */}
+            <div className="mt-8 max-w-2xl mx-auto">
               <form 
                 onSubmit={handleSubmit} 
                 id="discovery-form" 
-                className="relative flex items-center w-full glass-input rounded-2xl overflow-hidden border border-white/15 shadow-[0_0_60px_-10px_rgba(229,9,20,0.3)] focus-within:border-red-500/60 focus-within:shadow-[0_0_70px_0_rgba(229,9,20,0.5)] transition-all duration-300 p-2"
+                className="relative flex items-center w-full bg-[#0d0d12]/90 backdrop-blur-2xl rounded-full overflow-hidden border border-red-500/50 shadow-[0_0_50px_-5px_rgba(229,9,20,0.45)] focus-within:border-red-500 focus-within:shadow-[0_0_65px_0_rgba(229,9,20,0.65)] transition-all duration-300 p-1.5 pl-5"
               >
-                <div className="pl-4 pr-2 text-red-500 flex items-center justify-center">
-                  <Search className="w-6 h-6" />
+                <div className="text-red-500 flex items-center justify-center mr-2">
+                  <Search className="w-5 h-5" />
                 </div>
                 <input
                   id="scout-search-input"
@@ -132,129 +236,58 @@ export default function HomeView({ onSearchSubmit, isLoading, onSelectMovie, tas
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   disabled={isLoading}
-                  placeholder="e.g., A dark mystery series like Dark, or a painful romantic drama"
-                  className="w-full bg-transparent border-none text-white focus:ring-0 placeholder-gray-500 text-base sm:text-lg py-4 px-2 font-medium focus:outline-none"
+                  placeholder="A dark mystery series like Dark, or a painful romantic drama"
+                  className="w-full bg-transparent border-none text-white focus:ring-0 placeholder-gray-400 text-xs sm:text-sm md:text-base py-3 px-1 font-medium focus:outline-none"
                 />
                 <button
                   id="scout-submit-btn"
                   type="submit"
                   disabled={isLoading || !query.trim()}
-                  className="bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-extrabold px-8 py-4 rounded-xl flex items-center gap-2 transition-all duration-200 text-base shadow-[0_0_25px_-5px_rgba(229,9,20,0.6)] disabled:opacity-50 disabled:cursor-not-allowed shrink-0 cursor-pointer"
+                  className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold px-6 sm:px-8 py-3 rounded-full flex items-center gap-2 transition-all duration-200 text-xs sm:text-sm shadow-[0_0_20px_rgba(229,9,20,0.6)] disabled:opacity-50 disabled:cursor-not-allowed shrink-0 cursor-pointer"
                 >
                   {isLoading ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : (
                     <>
-                      <Sparkles className="w-5 h-5" />
+                      <Sparkles className="w-4 h-4" />
                       <span>Scout</span>
                     </>
                   )}
                 </button>
               </form>
             </div>
-          </div>
 
-          {/* Right 5 Columns: Visual Unwatched Movie Poster Graphic Cards */}
-          <div className="lg:col-span-5 relative hidden lg:block">
-            <div className="flex items-center justify-between mb-3 px-1">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-gray-400 flex items-center space-x-1.5">
-                <Compass className="w-3.5 h-3.5 text-red-500" />
-                <span>Tailored Unwatched Spotlight</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => setSpotlightOffset(prev => prev + 1)}
-                className="flex items-center space-x-1.5 text-xs text-red-400 hover:text-white glass-card border border-white/15 px-3 py-1 rounded-xl font-mono font-bold transition cursor-pointer shadow"
-                title="Refresh unwatched spotlight recommendations"
-              >
-                <RefreshCw className="w-3 h-3" />
-                <span>Refresh</span>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 relative z-10">
-              {currentSpotlightMovies.map((movie, idx) => (
-                <div 
-                  key={`${movie.id}_${idx}`} 
+            {/* Hashtag Vibe Chips directly below search */}
+            <div className="flex flex-wrap justify-center gap-2.5 pt-2 max-w-2xl mx-auto">
+              {hashtagPills.map((pill, i) => (
+                <button
+                  key={i}
+                  type="button"
                   onClick={() => {
-                    if (onSelectMovie) onSelectMovie(movie);
-                    else onSearchSubmit(movie.title);
+                    setQuery(pill.prompt);
+                    onSearchSubmit(pill.prompt);
                   }}
-                  className={`glass-card rounded-3xl overflow-hidden border border-white/15 shadow-2xl relative group transform transition duration-500 hover:scale-105 cursor-pointer ${idx % 2 === 1 ? 'translate-y-4' : ''}`}
+                  className="bg-black/60 hover:bg-red-950/50 border border-red-500/30 hover:border-red-500/70 text-gray-300 hover:text-white px-4 py-1.5 rounded-full text-xs font-semibold cursor-pointer transition duration-200 shadow-sm backdrop-blur-md"
                 >
-                  <div className="h-64 overflow-hidden relative bg-black/60">
-                    <img 
-                      src={getCleanImageUrl(movie.posterUrl, 'poster')} 
-                      alt={movie.title} 
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover group-hover:scale-110 transition duration-700 filter brightness-95"
-                      onError={(e) => handleImageLoadError(e, movie.backdropUrl)}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#070709] via-black/20 to-transparent"></div>
-                    <div className="absolute top-3 left-3">
-                      <span className="bg-red-500/20 text-red-300 border border-red-500/40 text-[10px] font-mono font-bold px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur-md shadow">
-                        {movie.genres[0] || 'Spotlight'}
-                      </span>
-                    </div>
-                    <div className="absolute bottom-3 left-3 right-3">
-                      <h4 className="text-white font-extrabold text-base font-heading drop-shadow group-hover:text-red-400 transition truncate">{movie.title}</h4>
-                      <span className="text-gray-400 text-xs font-mono">{movie.year} · ★ {movie.rating}</span>
-                    </div>
-                  </div>
-                </div>
+                  {pill.label}
+                </button>
               ))}
             </div>
-            {/* Ambient Background Glow */}
-            <div className="absolute -top-10 -right-10 w-96 h-96 bg-red-600/15 rounded-full blur-3xl pointer-events-none"></div>
+
           </div>
-
         </div>
       </section>
 
-
-
-      {/* Mood Description Section */}
-      <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-10 space-y-6">
-        <h3 className="text-xl font-extrabold text-white font-heading flex items-center space-x-2">
-          <span className="w-2 h-2 rounded-full bg-red-500"></span>
-          <span>Try describing your mood</span>
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {quickPrompts.map((prompt, i) => (
-            <button
-              id={`quick-prompt-${i}`}
-              key={i}
-              onClick={() => {
-                setQuery(prompt.text);
-                onSearchSubmit(prompt.text);
-              }}
-              disabled={isLoading}
-              className="text-left glass-card p-6 rounded-2xl hover:-translate-y-1 transition duration-300 group border border-white/10 hover:border-red-500/40 shadow-xl flex flex-col justify-between h-full cursor-pointer"
-            >
-              <div>
-                <span className="text-base font-extrabold text-white group-hover:text-red-400 transition-colors block mb-2 font-heading">
-                  {prompt.title}
-                </span>
-                <p className="text-xs sm:text-sm text-gray-300 leading-relaxed group-hover:text-gray-100 transition-colors font-sans">
-                  "{prompt.text}"
-                </p>
-              </div>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* Trending Curated Directions Section */}
-      <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-10 space-y-6">
+      {/* Curated Trending Collections Section */}
+      <section className="max-w-[1550px] mx-auto px-4 sm:px-6 lg:px-12 pt-8 pb-4 space-y-6">
         <div>
-          <h2 className="text-2xl font-extrabold text-white mb-2 font-heading flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-red-500"></span>
-            <span>Trending Curated Directions</span>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-white font-heading tracking-tight">
+            Curated Trending Collections
           </h2>
         </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {curatedCollections.map((col, i) => {
-            const Icon = col.icon;
             return (
               <div
                 id={`curated-col-${i}`}
@@ -263,19 +296,30 @@ export default function HomeView({ onSearchSubmit, isLoading, onSelectMovie, tas
                   setQuery(col.prompt);
                   onSearchSubmit(col.prompt);
                 }}
-                className={`w-full min-h-[260px] relative rounded-3xl overflow-hidden group glass-card transition duration-300 hover:scale-[1.03] cursor-pointer shadow-2xl border border-white/10 hover:border-red-500/40`}
+                className={`glass-card p-4 rounded-3xl border border-white/10 hover:border-red-500/50 transition-all duration-300 hover:scale-[1.02] cursor-pointer shadow-xl relative overflow-hidden group`}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${col.gradient} opacity-40 group-hover:opacity-60 transition duration-300`}></div>
-                <div className="absolute inset-0 p-6 flex flex-col justify-end">
-                  <div className="w-12 h-12 mb-4 text-white flex items-center justify-center p-2.5 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 shadow-md">
-                    <Icon className="w-6 h-6 text-red-400" />
-                  </div>
-                  <h4 className="text-lg font-extrabold text-white mb-2 leading-tight font-heading">
+                {/* 4-Poster Thumbnail Preview Row */}
+                <div className="grid grid-cols-4 gap-2 mb-4">
+                  {col.movieTitles.map((t, idx) => (
+                    <div key={idx} className="h-28 rounded-xl overflow-hidden bg-black/60 border border-white/10 relative group-hover:border-white/20 transition">
+                      <img 
+                        src={getThumbnailByTitle(t)} 
+                        alt={t} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                        onError={(e) => handleImageLoadError(e)}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Collection Meta */}
+                <div className="space-y-1">
+                  <h4 className="text-base font-extrabold text-white font-heading group-hover:text-red-400 transition truncate">
                     {col.title}
                   </h4>
-                  <p className="text-xs text-gray-300 line-clamp-3 font-sans leading-relaxed">
-                    {col.description}
-                  </p>
+                  <span className="text-xs text-gray-400 font-mono block">
+                    {col.countText}
+                  </span>
                 </div>
               </div>
             );

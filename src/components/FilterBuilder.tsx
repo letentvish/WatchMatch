@@ -8,6 +8,18 @@ interface FilterBuilderProps {
   isLoading: boolean;
 }
 
+const formatContentType = (type?: string): string => {
+  if (!type) return 'Title';
+  switch (type.toLowerCase()) {
+    case 'limited_series': return 'Limited Series';
+    case 'series': return 'TV Series';
+    case 'movie': return 'Movie';
+    case 'anime': return 'Anime';
+    case 'documentary': return 'Documentary';
+    default: return type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
+  }
+};
+
 export default function FilterBuilder({ initialFilters, onApplyFilters, isLoading }: FilterBuilderProps) {
   const defaultFilters: SearchFilters = {
     intent_type: 'recommendation',

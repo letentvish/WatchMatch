@@ -21,7 +21,7 @@ export function getCleanImageUrl(url: string | undefined, type: 'poster' | 'back
   }
 
   // Detect explicit Unsplash photo IDs erroneously wrapped in a TMDB path (e.g. photo-153444...)
-  if (url.includes('image.tmdb.org/t/p/') && (url.includes('photo-') || url.includes('15344') || url.includes('15091') || url.includes('14895'))) {
+  if (url.includes('image.tmdb.org/t/p/') && url.includes('/photo-')) {
     const filename = url.split('/').pop() || '';
     const cleanId = filename.replace(/\.(jpg|jpeg|png|webp)/i, '');
     const photoId = cleanId.startsWith('photo-') ? cleanId : `photo-${cleanId}`;

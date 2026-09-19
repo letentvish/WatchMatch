@@ -18,7 +18,7 @@ export interface Movie {
   languages: string[];
   countries: string[];
   seriesStatus?: 'finished' | 'ongoing' | 'cancelled' | 'limited_series';
-  endingPreference?: 'happy' | 'tragic' | 'satisfying' | 'open_ended';
+  endingPreference?: 'happy' | 'tragic' | 'satisfying' | 'open_ended' | 'bittersweet';
   contentWarnings?: string[];
   platforms: string[]; // e.g. Netflix, Prime Video, JioHotstar, Apple TV
   synopsis: string;
@@ -52,7 +52,7 @@ export interface SearchFilters {
   runtime_max_minutes: number | null;
   max_total_watch_hours: number | null;
   series_status: 'finished' | 'ongoing' | 'cancelled' | 'limited_series' | 'any';
-  ending_preference: 'happy' | 'tragic' | 'satisfying' | 'open_ended' | 'any';
+  ending_preference: 'happy' | 'tragic' | 'satisfying' | 'open_ended' | 'bittersweet' | 'any';
   content_exclusions: string[];
   platform_preferences: string[];
   similar_to_titles: string[];
@@ -79,6 +79,7 @@ export interface RecommendationResponse {
   recommendations: RecommendationCardInfo[];
   refinement_suggestions: string[];
   movieDetails?: Record<string, Movie>;
+  diagnostics?: Record<string, any>; // pipeline stats, used by the eval harness
 }
 
 export interface CinephilePersona {
